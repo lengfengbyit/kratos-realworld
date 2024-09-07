@@ -4,6 +4,7 @@ import (
 	"context"
 	pb "kratos-realworld/api/user/v1"
 	"kratos-realworld/internal/biz"
+	"kratos-realworld/internal/util"
 )
 
 type UserApiService struct {
@@ -17,10 +18,16 @@ func NewUserApiService(uc *biz.UserUsecase) *UserApiService {
 }
 
 func (u *UserApiService) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.UserReply, error) {
+	// 密码加密
+	passwordHash, err := util.GenerateFromPassword(req.User.Password)
+	if err != nil {
+		return nil, err
+	}
+
 	user, err := u.uc.CreateUser(ctx, &biz.User{
 		Username: req.User.Username,
 		Email:    req.User.Email,
-		Password: req.User.Password,
+		Password: passwordHash,
 	})
 	if err != nil {
 		return nil, err

@@ -19,10 +19,12 @@ var _ = binding.EncodeURL
 
 const _ = http.SupportPackageIsVersion1
 
+const OperationUserApiCurrentUser = "/user.v1.UserApi/CurrentUser"
 const OperationUserApiLogin = "/user.v1.UserApi/Login"
 const OperationUserApiRegister = "/user.v1.UserApi/Register"
 
 type UserApiHTTPServer interface {
+	CurrentUser(context.Context, *CurrUserRequest) (*UserReply, error)
 	Login(context.Context, *LoginRequest) (*UserReply, error)
 	Register(context.Context, *RegisterRequest) (*UserReply, error)
 }
@@ -31,6 +33,7 @@ func RegisterUserApiHTTPServer(s *http.Server, srv UserApiHTTPServer) {
 	r := s.Route("/")
 	r.POST("/api/users", _UserApi_Register0_HTTP_Handler(srv))
 	r.POST("/api/users/login", _UserApi_Login0_HTTP_Handler(srv))
+	r.GET("/api/user", _UserApi_CurrentUser0_HTTP_Handler(srv))
 }
 
 func _UserApi_Register0_HTTP_Handler(srv UserApiHTTPServer) func(ctx http.Context) error {
@@ -77,7 +80,27 @@ func _UserApi_Login0_HTTP_Handler(srv UserApiHTTPServer) func(ctx http.Context) 
 	}
 }
 
+func _UserApi_CurrentUser0_HTTP_Handler(srv UserApiHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in CurrUserRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationUserApiCurrentUser)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.CurrentUser(ctx, req.(*CurrUserRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UserReply)
+		return ctx.Result(200, reply)
+	}
+}
+
 type UserApiHTTPClient interface {
+	CurrentUser(ctx context.Context, req *CurrUserRequest, opts ...http.CallOption) (rsp *UserReply, err error)
 	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *UserReply, err error)
 	Register(ctx context.Context, req *RegisterRequest, opts ...http.CallOption) (rsp *UserReply, err error)
 }
@@ -88,6 +111,19 @@ type UserApiHTTPClientImpl struct {
 
 func NewUserApiHTTPClient(client *http.Client) UserApiHTTPClient {
 	return &UserApiHTTPClientImpl{client}
+}
+
+func (c *UserApiHTTPClientImpl) CurrentUser(ctx context.Context, in *CurrUserRequest, opts ...http.CallOption) (*UserReply, error) {
+	var out UserReply
+	pattern := "/api/user"
+	path := binding.EncodeURL(pattern, in, true)
+	opts = append(opts, http.Operation(OperationUserApiCurrentUser))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "GET", path, nil, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
 }
 
 func (c *UserApiHTTPClientImpl) Login(ctx context.Context, in *LoginRequest, opts ...http.CallOption) (*UserReply, error) {

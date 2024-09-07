@@ -3,6 +3,7 @@ syntax = "proto3";
 package user.v1;
 
 import "google/api/annotations.proto";
+import "validate/validate.proto";
 
 option go_package = "kratos-realworld/api/user/v1;v1";
 
@@ -19,6 +20,12 @@ service UserApi {
       body: "*"
     };
   }
+
+  rpc CurrentUser(CurrUserRequest) returns (UserReply) {
+    option (google.api.http) = {
+      get: "/api/user"
+    };
+  }
 }
 
 message User {
@@ -31,11 +38,11 @@ message User {
 
 message RegisterRequest {
   message Data {
-    string email = 1;
-    string username = 2;
-    string password = 3;
+    string email = 1 [(validate.rules).string.email = true];
+    string username = 2 [(validate.rules).string = {min_len:3, max_len:32}];
+    string password = 3 [(validate.rules).string = {min_len:6, max_len:32}];
   }
-  Data user = 1;
+  Data user = 1 [(validate.rules).message.required = true];
 }
 
 message LoginRequest {
@@ -45,6 +52,8 @@ message LoginRequest {
   }
   Data user = 1;
 }
+
+message CurrUserRequest {}
 
 message UserReply {
   User user = 1;
