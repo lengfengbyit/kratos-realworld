@@ -44,6 +44,12 @@ api:
 	       --openapi_out=fq_schema_naming=true,default_response=false:. \
 	       $(API_PROTO_FILES)
 
+.PHONY: wire
+# wire
+wire:
+	cd cmd/kratos-realworld && wire
+
+
 .PHONY: build
 # build
 build:
