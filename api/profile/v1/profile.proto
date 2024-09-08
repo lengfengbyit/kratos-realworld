@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package profile.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "kratos-realworld/api/profile/v1;v1";
+
+service Profile {
+  rpc GetProfile (ProfileRequest) returns (ProfileReply) {
+    option (google.api.http) = {
+      get: "/api/profiles/{username}"
+    };
+  };
+  rpc Follow(ProfileRequest) returns (ProfileReply) {
+    option (google.api.http) = {
+      post: "/api/profiles/{username}/follow"
+      body: "*"
+    };
+  }
+  rpc Unfollow(ProfileRequest) returns (ProfileReply) {
+    option (google.api.http) = {
+      delete: "/api/profiles/{username}/follow"
+    };
+  }
+}
+
+message Data {
+  string username = 1;
+  string bio = 2;
+  string image = 3;
+  bool following = 4;
+}
+
+message ProfileRequest {
+  string username = 1;
+}
+
+message ProfileReply {
+  Data profile = 1;
+}

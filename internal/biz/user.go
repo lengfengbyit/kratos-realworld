@@ -25,8 +25,10 @@ type UserRepo interface {
 	Save(context.Context, *User) (*User, error)
 	Update(context.Context, *User) error
 	FindByEmail(context.Context, string) (*User, error)
-	Login(ctx context.Context, user *User) (*User, error)
-	FindById(ctx context.Context, id int64) (*User, error)
+	FindByUsername(context.Context, string) (*User, error)
+	FindIdByUsername(context.Context, string) (int64, error)
+	Login(context.Context, *User) (*User, error)
+	FindById(context.Context, int64) (*User, error)
 }
 
 // UserUsecase is a User usecase.
@@ -48,6 +50,11 @@ func (uc *UserUsecase) CreateUser(ctx context.Context, model *User) (*User, erro
 // FindByEmail finds the User by Email.
 func (uc *UserUsecase) FindByEmail(ctx context.Context, email string) (*User, error) {
 	return uc.repo.FindByEmail(ctx, email)
+}
+
+// FindByUsername finds the User by Email.
+func (uc *UserUsecase) FindByUsername(ctx context.Context, email string) (*User, error) {
+	return uc.repo.FindByUsername(ctx, email)
 }
 
 // FindById finds the User by ID.

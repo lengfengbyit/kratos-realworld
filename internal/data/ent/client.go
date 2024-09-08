@@ -11,6 +11,7 @@ import (
 
 	"kratos-realworld/internal/data/ent/migrate"
 
+	"kratos-realworld/internal/data/ent/follow"
 	"kratos-realworld/internal/data/ent/user"
 
 	"entgo.io/ent"
@@ -23,6 +24,8 @@ type Client struct {
 	config
 	// Schema is the client for creating, migrating and dropping schema.
 	Schema *migrate.Schema
+	// Follow is the client for interacting with the Follow builders.
+	Follow *FollowClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 }
@@ -36,6 +39,7 @@ func NewClient(opts ...Option) *Client {
 
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
+	c.Follow = NewFollowClient(c.config)
 	c.User = NewUserClient(c.config)
 }
 
@@ -129,6 +133,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	return &Tx{
 		ctx:    ctx,
 		config: cfg,
+		Follow: NewFollowClient(cfg),
 		User:   NewUserClient(cfg),
 	}, nil
 }
@@ -149,6 +154,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	return &Tx{
 		ctx:    ctx,
 		config: cfg,
+		Follow: NewFollowClient(cfg),
 		User:   NewUserClient(cfg),
 	}, nil
 }
@@ -156,7 +162,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 // Debug returns a new debug-client. It's used to get verbose logging on specific operations.
 //
 //	client.Debug().
-//		User.
+//		Follow.
 //		Query().
 //		Count(ctx)
 func (c *Client) Debug() *Client {
@@ -178,22 +184,159 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
+	c.Follow.Use(hooks...)
 	c.User.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
+	c.Follow.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
 func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
+	case *FollowMutation:
+		return c.Follow.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
+	}
+}
+
+// FollowClient is a client for the Follow schema.
+type FollowClient struct {
+	config
+}
+
+// NewFollowClient returns a client for the Follow from the given config.
+func NewFollowClient(c config) *FollowClient {
+	return &FollowClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `follow.Hooks(f(g(h())))`.
+func (c *FollowClient) Use(hooks ...Hook) {
+	c.hooks.Follow = append(c.hooks.Follow, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `follow.Intercept(f(g(h())))`.
+func (c *FollowClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Follow = append(c.inters.Follow, interceptors...)
+}
+
+// Create returns a builder for creating a Follow entity.
+func (c *FollowClient) Create() *FollowCreate {
+	mutation := newFollowMutation(c.config, OpCreate)
+	return &FollowCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Follow entities.
+func (c *FollowClient) CreateBulk(builders ...*FollowCreate) *FollowCreateBulk {
+	return &FollowCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *FollowClient) MapCreateBulk(slice any, setFunc func(*FollowCreate, int)) *FollowCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &FollowCreateBulk{err: fmt.Errorf("calling to FollowClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*FollowCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &FollowCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Follow.
+func (c *FollowClient) Update() *FollowUpdate {
+	mutation := newFollowMutation(c.config, OpUpdate)
+	return &FollowUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *FollowClient) UpdateOne(f *Follow) *FollowUpdateOne {
+	mutation := newFollowMutation(c.config, OpUpdateOne, withFollow(f))
+	return &FollowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *FollowClient) UpdateOneID(id int64) *FollowUpdateOne {
+	mutation := newFollowMutation(c.config, OpUpdateOne, withFollowID(id))
+	return &FollowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Follow.
+func (c *FollowClient) Delete() *FollowDelete {
+	mutation := newFollowMutation(c.config, OpDelete)
+	return &FollowDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *FollowClient) DeleteOne(f *Follow) *FollowDeleteOne {
+	return c.DeleteOneID(f.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *FollowClient) DeleteOneID(id int64) *FollowDeleteOne {
+	builder := c.Delete().Where(follow.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &FollowDeleteOne{builder}
+}
+
+// Query returns a query builder for Follow.
+func (c *FollowClient) Query() *FollowQuery {
+	return &FollowQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeFollow},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Follow entity by its id.
+func (c *FollowClient) Get(ctx context.Context, id int64) (*Follow, error) {
+	return c.Query().Where(follow.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *FollowClient) GetX(ctx context.Context, id int64) *Follow {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *FollowClient) Hooks() []Hook {
+	return c.hooks.Follow
+}
+
+// Interceptors returns the client interceptors.
+func (c *FollowClient) Interceptors() []Interceptor {
+	return c.inters.Follow
+}
+
+func (c *FollowClient) mutate(ctx context.Context, m *FollowMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&FollowCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&FollowUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&FollowUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&FollowDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Follow mutation op: %q", m.Op())
 	}
 }
 
@@ -333,9 +476,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		User []ent.Hook
+		Follow, User []ent.Hook
 	}
 	inters struct {
-		User []ent.Interceptor
+		Follow, User []ent.Interceptor
 	}
 )

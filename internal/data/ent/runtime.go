@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"kratos-realworld/internal/data/ent/follow"
 	"kratos-realworld/internal/data/ent/schema"
 	"kratos-realworld/internal/data/ent/user"
 	"time"
@@ -12,6 +13,20 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	followFields := schema.Follow{}.Fields()
+	_ = followFields
+	// followDescUserID is the schema descriptor for user_id field.
+	followDescUserID := followFields[1].Descriptor()
+	// follow.DefaultUserID holds the default value on creation for the user_id field.
+	follow.DefaultUserID = followDescUserID.Default.(int64)
+	// followDescBeUserID is the schema descriptor for be_user_id field.
+	followDescBeUserID := followFields[2].Descriptor()
+	// follow.DefaultBeUserID holds the default value on creation for the be_user_id field.
+	follow.DefaultBeUserID = followDescBeUserID.Default.(int64)
+	// followDescCreatedAt is the schema descriptor for created_at field.
+	followDescCreatedAt := followFields[3].Descriptor()
+	// follow.DefaultCreatedAt holds the default value on creation for the created_at field.
+	follow.DefaultCreatedAt = followDescCreatedAt.Default.(func() time.Time)
 	userFields := schema.User{}.Fields()
 	_ = userFields
 	// userDescBio is the schema descriptor for bio field.
@@ -25,9 +40,11 @@ func init() {
 	// userDescCreatedAt is the schema descriptor for created_at field.
 	userDescCreatedAt := userFields[6].Descriptor()
 	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
-	user.DefaultCreatedAt = userDescCreatedAt.Default.(time.Time)
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
 	// userDescUpdatedAt is the schema descriptor for updated_at field.
 	userDescUpdatedAt := userFields[7].Descriptor()
 	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
-	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(time.Time)
+	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
+	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
 }

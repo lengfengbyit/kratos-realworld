@@ -6,6 +6,65 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /api/profiles/{username}:
+        get:
+            tags:
+                - Profile
+            operationId: Profile_GetProfile
+            parameters:
+                - name: username
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/profile.v1.ProfileReply'
+    /api/profiles/{username}/follow:
+        post:
+            tags:
+                - Profile
+            operationId: Profile_Follow
+            parameters:
+                - name: username
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/profile.v1.ProfileRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/profile.v1.ProfileReply'
+        delete:
+            tags:
+                - Profile
+            operationId: Profile_Unfollow
+            parameters:
+                - name: username
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/profile.v1.ProfileReply'
     /api/user:
         get:
             tags:
@@ -98,6 +157,27 @@ components:
                 message:
                     type: string
             description: The response message containing the greetings
+        profile.v1.Data:
+            type: object
+            properties:
+                username:
+                    type: string
+                bio:
+                    type: string
+                image:
+                    type: string
+                following:
+                    type: boolean
+        profile.v1.ProfileReply:
+            type: object
+            properties:
+                profile:
+                    $ref: '#/components/schemas/profile.v1.Data'
+        profile.v1.ProfileRequest:
+            type: object
+            properties:
+                username:
+                    type: string
         user.v1.LoginRequest:
             type: object
             properties:
@@ -161,4 +241,5 @@ components:
 tags:
     - name: Greeter
       description: The greeting service definition.
+    - name: Profile
     - name: UserApi

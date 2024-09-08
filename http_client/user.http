@@ -4,13 +4,12 @@ GET {{host}}/helloworld/tom
 ### register
 POST {{host}}/api/users
 Content-Type: application/json
-Authorization: Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE3MjU3NTg3NDd9.f1O3I9yykmnfiq8ppbpsIfDlwoViW1ehmR7ndM6B-Sk
 
 {
   "user": {
-    "username": "tom",
-    "email": "tom@example.com",
-    "password": "tom123"
+    "username": {{username}},
+    "email": {{email}},
+    "password": {{password}}
   }
 }
 
@@ -20,8 +19,8 @@ Content-Type: application/json
 
 {
   "user": {
-    "email": "tom@example.com",
-    "password": "tom123"
+    "email": "{{email}}",
+    "password": "{{password}}"
   }
 }
 
@@ -37,7 +36,6 @@ Authorization: {{token}}
 
 {
   "user": {
-    "email": "tom@example.com",
     "bio": "I am a tom",
     "image": "https://i.imgur.com/73hZDYK.png"
   }

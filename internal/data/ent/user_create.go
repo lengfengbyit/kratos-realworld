@@ -158,11 +158,11 @@ func (uc *UserCreate) defaults() {
 		uc.mutation.SetImage(v)
 	}
 	if _, ok := uc.mutation.CreatedAt(); !ok {
-		v := user.DefaultCreatedAt
+		v := user.DefaultCreatedAt()
 		uc.mutation.SetCreatedAt(v)
 	}
 	if _, ok := uc.mutation.UpdatedAt(); !ok {
-		v := user.DefaultUpdatedAt
+		v := user.DefaultUpdatedAt()
 		uc.mutation.SetUpdatedAt(v)
 	}
 }

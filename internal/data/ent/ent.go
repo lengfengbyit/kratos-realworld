@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"kratos-realworld/internal/data/ent/follow"
 	"kratos-realworld/internal/data/ent/user"
 	"reflect"
 	"sync"
@@ -73,7 +74,8 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			user.Table: user.ValidColumn,
+			follow.Table: follow.ValidColumn,
+			user.Table:   user.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

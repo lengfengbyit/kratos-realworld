@@ -8,6 +8,31 @@ import (
 )
 
 var (
+	// FollowsColumns holds the columns for the "follows" table.
+	FollowsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
+		{Name: "user_id", Type: field.TypeInt64, Default: 0},
+		{Name: "be_user_id", Type: field.TypeInt64, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// FollowsTable holds the schema information for the "follows" table.
+	FollowsTable = &schema.Table{
+		Name:       "follows",
+		Columns:    FollowsColumns,
+		PrimaryKey: []*schema.Column{FollowsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "follow_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{FollowsColumns[1]},
+			},
+			{
+				Name:    "follow_be_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{FollowsColumns[2]},
+			},
+		},
+	}
 	// UsersColumns holds the columns for the "users" table.
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -28,6 +53,7 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		FollowsTable,
 		UsersTable,
 	}
 )

@@ -21,8 +21,8 @@ func (User) Fields() []ent.Field {
 		field.String("password"),
 		field.String("bio").Default(""),
 		field.String("image").Default(""),
-		field.Time("created_at").Default(time.Now()),
-		field.Time("updated_at").Default(time.Now()),
+		field.Time("created_at").Default(time.Now),
+		field.Time("updated_at").Default(time.Now).UpdateDefault(time.Now),
 		field.Time("deleted_at").Optional(),
 	}
 }

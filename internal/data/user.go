@@ -85,6 +85,24 @@ func (r *userRepo) FindByEmail(ctx context.Context, email string) (*biz.User, er
 	return &u, nil
 }
 
+func (r *userRepo) FindByUsername(ctx context.Context, username string) (*biz.User, error) {
+	info, err := r.data.db.User.Query().Where(user.UsernameEQ(username)).First(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var u biz.User
+	if err = copier.Copy(&u, info); err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (r *userRepo) FindIdByUsername(ctx context.Context, username string) (int64, error) {
+	id, err := r.data.db.User.Query().Where(user.UsernameEQ(username)).FirstID(ctx)
+	return id, err
+}
+
 func (r *userRepo) FindById(ctx context.Context, id int64) (*biz.User, error) {
 	info, err := r.data.db.User.Get(ctx, id)
 	if err != nil {

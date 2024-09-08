@@ -1,0 +1,15 @@
+
+### profile info
+GET {{host}}/api/profiles/tom
+Authorization: {{token}}
+
+
+### follow user
+POST {{host}}/api/profiles/tom/follow
+Content-Type: application/json
+Authorization: {{token}}
+
+### unfollow user
+DELETE {{host}}/api/profiles/tom/follow
+Content-Type: application/json
+Authorization: {{token}}
