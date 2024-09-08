@@ -24,10 +24,9 @@ type User struct {
 type UserRepo interface {
 	Save(context.Context, *User) (*User, error)
 	Update(context.Context, *User) (*User, error)
-	FindByID(context.Context, int64) (*User, error)
+	FindByEmail(context.Context, string) (*User, error)
 	ListAll(context.Context) ([]*User, error)
 	Login(ctx context.Context, user *User) (*User, error)
-	Register(ctx context.Context, user *User) (*User, error)
 }
 
 // UserUsecase is a User usecase.
@@ -44,4 +43,8 @@ func NewUserUsecase(repo UserRepo, logger log.Logger) *UserUsecase {
 // CreateUser creates a User, and returns the new User.
 func (uc *UserUsecase) CreateUser(ctx context.Context, model *User) (*User, error) {
 	return uc.repo.Save(ctx, model)
+}
+
+func (uc *UserUsecase) FindByEmail(ctx context.Context, email string) (*User, error) {
+	return uc.repo.FindByEmail(ctx, email)
 }

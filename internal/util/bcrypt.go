@@ -13,5 +13,5 @@ func GenerateFromPassword(password string) (string, error) {
 
 // CompareHashAndPassword compares a hash with a password
 func CompareHashAndPassword(hash, password string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) != nil
+	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
