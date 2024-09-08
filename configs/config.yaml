@@ -8,6 +8,7 @@ server:
   auth:
     jwt:
       secret: "secret"
+      expire: "12h"
 data:
   database:
     driver: mysql

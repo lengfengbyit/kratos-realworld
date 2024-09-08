@@ -23,7 +23,7 @@ type User struct {
 // UserRepo is a User repo.
 type UserRepo interface {
 	Save(context.Context, *User) (*User, error)
-	Update(context.Context, *User) (*User, error)
+	Update(context.Context, *User) error
 	FindByEmail(context.Context, string) (*User, error)
 	Login(ctx context.Context, user *User) (*User, error)
 	FindById(ctx context.Context, id int64) (*User, error)
@@ -53,4 +53,12 @@ func (uc *UserUsecase) FindByEmail(ctx context.Context, email string) (*User, er
 // FindById finds the User by ID.
 func (uc *UserUsecase) FindById(ctx context.Context, id int64) (*User, error) {
 	return uc.repo.FindById(ctx, id)
+}
+
+func (uc *UserUsecase) UpdateUser(ctx context.Context, model *User) (*User, error) {
+	err := uc.repo.Update(ctx, model)
+	if err != nil {
+		return nil, err
+	}
+	return uc.repo.FindById(ctx, model.ID)
 }

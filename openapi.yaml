@@ -132,11 +132,13 @@ components:
         user.v1.UpdateUserRequest_Data:
             type: object
             properties:
-                email:
-                    type: string
                 bio:
                     type: string
                 image:
+                    type: string
+                username:
+                    type: string
+                password:
                     type: string
         user.v1.User:
             type: object

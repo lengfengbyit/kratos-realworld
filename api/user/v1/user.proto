@@ -63,9 +63,10 @@ message LoginRequest {
 
 message UpdateUserRequest {
   message Data {
-    string email = 1 [(validate.rules).string.email = true];
-    string bio = 2;
-    string image = 3 [(validate.rules).string.uri = true];
+    string bio = 1 [(validate.rules).string = {max_len:256, ignore_empty:true}];
+    string image = 2 [(validate.rules).string = {uri:true, ignore_empty:true}];
+    string username = 3 [(validate.rules).string = {min_len:3, max_len:32, ignore_empty:true}];
+    string password = 4 [(validate.rules).string = {min_len:6, max_len:32, ignore_empty:true}];
   }
   Data user = 1 [(validate.rules).message.required = true];
 }

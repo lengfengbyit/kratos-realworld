@@ -46,8 +46,30 @@ func (r *userRepo) Save(ctx context.Context, g *biz.User) (*biz.User, error) {
 	return &u, err
 }
 
-func (r *userRepo) Update(ctx context.Context, g *biz.User) (*biz.User, error) {
-	return g, nil
+func (r *userRepo) Update(ctx context.Context, g *biz.User) error {
+	userUpdate := r.data.db.User.Update().Where(user.ID(g.ID))
+	if g.Username != "" {
+		userUpdate.SetUsername(g.Username)
+	}
+	if g.Password != "" {
+		userUpdate.SetPassword(g.Password)
+	}
+	if g.Email != "" {
+		userUpdate.SetEmail(g.Email)
+	}
+	if g.Bio != "" {
+		userUpdate.SetBio(g.Bio)
+	}
+	if g.Image != "" {
+		userUpdate.SetImage(g.Image)
+	}
+
+	_, err := userUpdate.Save(ctx)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 func (r *userRepo) FindByEmail(ctx context.Context, email string) (*biz.User, error) {

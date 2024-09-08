@@ -6,7 +6,7 @@ POST {{host}}/api/users
 Content-Type: application/json
 Authorization: Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE3MjU3NTg3NDd9.f1O3I9yykmnfiq8ppbpsIfDlwoViW1ehmR7ndM6B-Sk
 
- {
+{
   "user": {
     "username": "tom",
     "email": "tom@example.com",
@@ -28,3 +28,17 @@ Content-Type: application/json
 ### get current user
 GET {{host}}/api/user
 Authorization: {{token}}
+
+
+### update user
+PUT {{host}}/api/user
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "user": {
+    "email": "tom@example.com",
+    "bio": "I am a tom",
+    "image": "https://i.imgur.com/73hZDYK.png"
+  }
+}
