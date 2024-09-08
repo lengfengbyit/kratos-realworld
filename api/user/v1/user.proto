@@ -4,6 +4,7 @@ package user.v1;
 
 import "google/api/annotations.proto";
 import "validate/validate.proto";
+import "google/protobuf/empty.proto";
 
 option go_package = "kratos-realworld/api/user/v1;v1";
 
@@ -21,9 +22,16 @@ service UserApi {
     };
   }
 
-  rpc CurrentUser(CurrUserRequest) returns (UserReply) {
+  rpc CurrentUser(google.protobuf.Empty) returns (UserReply) {
     option (google.api.http) = {
       get: "/api/user"
+    };
+  }
+
+  rpc UpdateUser(UpdateUserRequest) returns (UserReply) {
+    option (google.api.http) = {
+      put: "/api/user",
+      body: "*"
     };
   }
 }
@@ -53,7 +61,14 @@ message LoginRequest {
   Data user = 1;
 }
 
-message CurrUserRequest {}
+message UpdateUserRequest {
+  message Data {
+    string email = 1 [(validate.rules).string.email = true];
+    string bio = 2;
+    string image = 3 [(validate.rules).string.uri = true];
+  }
+  Data user = 1 [(validate.rules).message.required = true];
+}
 
 message UserReply {
   User user = 1;

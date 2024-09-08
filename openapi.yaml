@@ -18,6 +18,23 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/user.v1.UserReply'
+        put:
+            tags:
+                - UserApi
+            operationId: UserApi_UpdateUser
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/user.v1.UpdateUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/user.v1.UserReply'
     /api/users:
         post:
             tags:
@@ -106,6 +123,20 @@ components:
                 username:
                     type: string
                 password:
+                    type: string
+        user.v1.UpdateUserRequest:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/user.v1.UpdateUserRequest_Data'
+        user.v1.UpdateUserRequest_Data:
+            type: object
+            properties:
+                email:
+                    type: string
+                bio:
+                    type: string
+                image:
                     type: string
         user.v1.User:
             type: object

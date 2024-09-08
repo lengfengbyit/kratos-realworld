@@ -24,3 +24,7 @@ Content-Type: application/json
     "password": "tom123"
   }
 }
+
+### get current user
+GET {{host}}/api/user
+Authorization: {{token}}

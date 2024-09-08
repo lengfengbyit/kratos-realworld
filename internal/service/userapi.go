@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/copier"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type UserApiService struct {
@@ -23,18 +24,18 @@ func NewUserApiService(uc *biz.UserUsecase, conf *conf.Server) *UserApiService {
 	return &UserApiService{uc: uc, conf: conf}
 }
 
-func (u *UserApiService) generateToken(userId int64) string {
-	return auth.GenerateToken(auth.NewTokenClaims(userId, time.Hour), u.conf.Auth.Jwt.Secret)
+func (s *UserApiService) generateToken(userId int64) string {
+	return auth.GenerateToken(auth.NewTokenClaims(userId, time.Hour), s.conf.Auth.Jwt.Secret)
 }
 
-func (u *UserApiService) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.UserReply, error) {
+func (s *UserApiService) Register(ctx context.Context, req *pb.RegisterRequest) (*pb.UserReply, error) {
 	// 密码加密
 	passwordHash, err := util.GenerateFromPassword(req.User.Password)
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := u.uc.CreateUser(ctx, &biz.User{
+	user, err := s.uc.CreateUser(ctx, &biz.User{
 		Username: req.User.Username,
 		Email:    req.User.Email,
 		Password: passwordHash,
@@ -47,7 +48,7 @@ func (u *UserApiService) Register(ctx context.Context, req *pb.RegisterRequest) 
 		User: &pb.User{
 			Username: user.Username,
 			Email:    user.Email,
-			Token:    u.generateToken(user.ID),
+			Token:    s.generateToken(user.ID),
 		},
 	}, nil
 }
@@ -72,4 +73,27 @@ func (s *UserApiService) Login(ctx context.Context, req *pb.LoginRequest) (*pb.U
 	return &pb.UserReply{
 		User: &u,
 	}, nil
+}
+
+func (s *UserApiService) CurrentUser(ctx context.Context, e *emptypb.Empty) (*pb.UserReply, error) {
+
+	userId, err := auth.GetUserId(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := s.uc.FindById(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	var u pb.User
+	if err = copier.Copy(&u, user); err != nil {
+		return nil, err
+	}
+	return &pb.UserReply{User: &u}, nil
+}
+
+func (s *UserApiService) UpdateUser(ctx context.Context, req *pb.UpdateUserRequest) (*pb.UserReply, error) {
+	return nil, nil
 }

@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -29,4 +31,15 @@ func GenerateToken(tokenClaims *TokenClaims, secret string) string {
 		panic(err)
 	}
 	return fmt.Sprintf(bearerFormat, token)
+}
+
+// GetUserId returns the user id from the context
+func GetUserId(ctx context.Context) (int64, error) {
+	token, _ := FromContext(ctx)
+	claims := token.(jwt.MapClaims)
+	userId, ok := claims["user_id"]
+	if !ok {
+		return 0, errors.New("token invalid")
+	}
+	return int64(userId.(float64)), nil
 }

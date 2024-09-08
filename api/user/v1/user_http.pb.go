@@ -10,6 +10,7 @@ import (
 	context "context"
 	http "github.com/go-kratos/kratos/v2/transport/http"
 	binding "github.com/go-kratos/kratos/v2/transport/http/binding"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -22,11 +23,13 @@ const _ = http.SupportPackageIsVersion1
 const OperationUserApiCurrentUser = "/user.v1.UserApi/CurrentUser"
 const OperationUserApiLogin = "/user.v1.UserApi/Login"
 const OperationUserApiRegister = "/user.v1.UserApi/Register"
+const OperationUserApiUpdateUser = "/user.v1.UserApi/UpdateUser"
 
 type UserApiHTTPServer interface {
-	CurrentUser(context.Context, *CurrUserRequest) (*UserReply, error)
+	CurrentUser(context.Context, *emptypb.Empty) (*UserReply, error)
 	Login(context.Context, *LoginRequest) (*UserReply, error)
 	Register(context.Context, *RegisterRequest) (*UserReply, error)
+	UpdateUser(context.Context, *UpdateUserRequest) (*UserReply, error)
 }
 
 func RegisterUserApiHTTPServer(s *http.Server, srv UserApiHTTPServer) {
@@ -34,6 +37,7 @@ func RegisterUserApiHTTPServer(s *http.Server, srv UserApiHTTPServer) {
 	r.POST("/api/users", _UserApi_Register0_HTTP_Handler(srv))
 	r.POST("/api/users/login", _UserApi_Login0_HTTP_Handler(srv))
 	r.GET("/api/user", _UserApi_CurrentUser0_HTTP_Handler(srv))
+	r.PUT("/api/user", _UserApi_UpdateUser0_HTTP_Handler(srv))
 }
 
 func _UserApi_Register0_HTTP_Handler(srv UserApiHTTPServer) func(ctx http.Context) error {
@@ -82,13 +86,35 @@ func _UserApi_Login0_HTTP_Handler(srv UserApiHTTPServer) func(ctx http.Context) 
 
 func _UserApi_CurrentUser0_HTTP_Handler(srv UserApiHTTPServer) func(ctx http.Context) error {
 	return func(ctx http.Context) error {
-		var in CurrUserRequest
+		var in emptypb.Empty
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
 		http.SetOperation(ctx, OperationUserApiCurrentUser)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.CurrentUser(ctx, req.(*CurrUserRequest))
+			return srv.CurrentUser(ctx, req.(*emptypb.Empty))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*UserReply)
+		return ctx.Result(200, reply)
+	}
+}
+
+func _UserApi_UpdateUser0_HTTP_Handler(srv UserApiHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in UpdateUserRequest
+		if err := ctx.Bind(&in); err != nil {
+			return err
+		}
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationUserApiUpdateUser)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.UpdateUser(ctx, req.(*UpdateUserRequest))
 		})
 		out, err := h(ctx, &in)
 		if err != nil {
@@ -100,9 +126,10 @@ func _UserApi_CurrentUser0_HTTP_Handler(srv UserApiHTTPServer) func(ctx http.Con
 }
 
 type UserApiHTTPClient interface {
-	CurrentUser(ctx context.Context, req *CurrUserRequest, opts ...http.CallOption) (rsp *UserReply, err error)
+	CurrentUser(ctx context.Context, req *emptypb.Empty, opts ...http.CallOption) (rsp *UserReply, err error)
 	Login(ctx context.Context, req *LoginRequest, opts ...http.CallOption) (rsp *UserReply, err error)
 	Register(ctx context.Context, req *RegisterRequest, opts ...http.CallOption) (rsp *UserReply, err error)
+	UpdateUser(ctx context.Context, req *UpdateUserRequest, opts ...http.CallOption) (rsp *UserReply, err error)
 }
 
 type UserApiHTTPClientImpl struct {
@@ -113,7 +140,7 @@ func NewUserApiHTTPClient(client *http.Client) UserApiHTTPClient {
 	return &UserApiHTTPClientImpl{client}
 }
 
-func (c *UserApiHTTPClientImpl) CurrentUser(ctx context.Context, in *CurrUserRequest, opts ...http.CallOption) (*UserReply, error) {
+func (c *UserApiHTTPClientImpl) CurrentUser(ctx context.Context, in *emptypb.Empty, opts ...http.CallOption) (*UserReply, error) {
 	var out UserReply
 	pattern := "/api/user"
 	path := binding.EncodeURL(pattern, in, true)
@@ -146,6 +173,19 @@ func (c *UserApiHTTPClientImpl) Register(ctx context.Context, in *RegisterReques
 	opts = append(opts, http.Operation(OperationUserApiRegister))
 	opts = append(opts, http.PathTemplate(pattern))
 	err := c.cc.Invoke(ctx, "POST", path, in, &out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *UserApiHTTPClientImpl) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...http.CallOption) (*UserReply, error) {
+	var out UserReply
+	pattern := "/api/user"
+	path := binding.EncodeURL(pattern, in, false)
+	opts = append(opts, http.Operation(OperationUserApiUpdateUser))
+	opts = append(opts, http.PathTemplate(pattern))
+	err := c.cc.Invoke(ctx, "PUT", path, in, &out, opts...)
 	if err != nil {
 		return nil, err
 	}

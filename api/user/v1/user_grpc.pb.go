@@ -11,6 +11,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -22,6 +23,7 @@ const (
 	UserApi_Register_FullMethodName    = "/user.v1.UserApi/Register"
 	UserApi_Login_FullMethodName       = "/user.v1.UserApi/Login"
 	UserApi_CurrentUser_FullMethodName = "/user.v1.UserApi/CurrentUser"
+	UserApi_UpdateUser_FullMethodName  = "/user.v1.UserApi/UpdateUser"
 )
 
 // UserApiClient is the client API for UserApi service.
@@ -30,7 +32,8 @@ const (
 type UserApiClient interface {
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*UserReply, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*UserReply, error)
-	CurrentUser(ctx context.Context, in *CurrUserRequest, opts ...grpc.CallOption) (*UserReply, error)
+	CurrentUser(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UserReply, error)
+	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UserReply, error)
 }
 
 type userApiClient struct {
@@ -61,10 +64,20 @@ func (c *userApiClient) Login(ctx context.Context, in *LoginRequest, opts ...grp
 	return out, nil
 }
 
-func (c *userApiClient) CurrentUser(ctx context.Context, in *CurrUserRequest, opts ...grpc.CallOption) (*UserReply, error) {
+func (c *userApiClient) CurrentUser(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*UserReply, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UserReply)
 	err := c.cc.Invoke(ctx, UserApi_CurrentUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userApiClient) UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UserReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UserReply)
+	err := c.cc.Invoke(ctx, UserApi_UpdateUser_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +90,8 @@ func (c *userApiClient) CurrentUser(ctx context.Context, in *CurrUserRequest, op
 type UserApiServer interface {
 	Register(context.Context, *RegisterRequest) (*UserReply, error)
 	Login(context.Context, *LoginRequest) (*UserReply, error)
-	CurrentUser(context.Context, *CurrUserRequest) (*UserReply, error)
+	CurrentUser(context.Context, *emptypb.Empty) (*UserReply, error)
+	UpdateUser(context.Context, *UpdateUserRequest) (*UserReply, error)
 	mustEmbedUnimplementedUserApiServer()
 }
 
@@ -94,8 +108,11 @@ func (UnimplementedUserApiServer) Register(context.Context, *RegisterRequest) (*
 func (UnimplementedUserApiServer) Login(context.Context, *LoginRequest) (*UserReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
 }
-func (UnimplementedUserApiServer) CurrentUser(context.Context, *CurrUserRequest) (*UserReply, error) {
+func (UnimplementedUserApiServer) CurrentUser(context.Context, *emptypb.Empty) (*UserReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CurrentUser not implemented")
+}
+func (UnimplementedUserApiServer) UpdateUser(context.Context, *UpdateUserRequest) (*UserReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
 }
 func (UnimplementedUserApiServer) mustEmbedUnimplementedUserApiServer() {}
 func (UnimplementedUserApiServer) testEmbeddedByValue()                 {}
@@ -155,7 +172,7 @@ func _UserApi_Login_Handler(srv interface{}, ctx context.Context, dec func(inter
 }
 
 func _UserApi_CurrentUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CurrUserRequest)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -167,7 +184,25 @@ func _UserApi_CurrentUser_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: UserApi_CurrentUser_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserApiServer).CurrentUser(ctx, req.(*CurrUserRequest))
+		return srv.(UserApiServer).CurrentUser(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserApi_UpdateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserApiServer).UpdateUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserApi_UpdateUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserApiServer).UpdateUser(ctx, req.(*UpdateUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -190,6 +225,10 @@ var UserApi_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CurrentUser",
 			Handler:    _UserApi_CurrentUser_Handler,
+		},
+		{
+			MethodName: "UpdateUser",
+			Handler:    _UserApi_UpdateUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

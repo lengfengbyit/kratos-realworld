@@ -63,10 +63,15 @@ func (r *userRepo) FindByEmail(ctx context.Context, email string) (*biz.User, er
 	return &u, nil
 }
 
-func (r *userRepo) ListByHello(context.Context, string) ([]*biz.User, error) {
-	return nil, nil
-}
+func (r *userRepo) FindById(ctx context.Context, id int64) (*biz.User, error) {
+	info, err := r.data.db.User.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
 
-func (r *userRepo) ListAll(context.Context) ([]*biz.User, error) {
-	return nil, nil
+	var u biz.User
+	if err = copier.Copy(&u, info); err != nil {
+		return nil, err
+	}
+	return &u, nil
 }
