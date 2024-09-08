@@ -7,6 +7,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v1.0.4
 	github.com/go-kratos/kratos/v2 v2.8.0
 	github.com/go-sql-driver/mysql v1.8.1
+	github.com/golang-jwt/jwt/v5 v5.1.0
 	github.com/google/wire v0.6.0
 	github.com/jinzhu/copier v0.4.0
 	go.opentelemetry.io/otel v1.24.0

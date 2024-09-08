@@ -4,6 +4,7 @@ GET {{host}}/helloworld/tom
 ### register
 POST {{host}}/api/users
 Content-Type: application/json
+Authorization: Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjE3MjU3NTg3NDd9.f1O3I9yykmnfiq8ppbpsIfDlwoViW1ehmR7ndM6B-Sk
 
  {
   "user": {
