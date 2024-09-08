@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"kratos-realworld/internal/conf"
 	"kratos-realworld/internal/data/ent"
@@ -36,7 +37,9 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 
 	// 链路追踪，打印 SQL
 	sqlDriver := dialect.DebugWithContext(drv, func(ctx context.Context, a ...any) {
-		lh.WithContext(ctx).Info(a...)
+		if c.Database.Debug {
+			lh.Info(a...)
+		}
 		tracer := otel.Tracer("ent.")
 		kind := trace.SpanKindServer
 		_, span := tracer.Start(ctx, "Query",
@@ -63,4 +66,30 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 	}
 
 	return d, cleanup, nil
+}
+
+// WithTx 事务，自动提交或回滚
+func (d *Data) WithTx(ctx context.Context, fn func(tx *ent.Tx) error) error {
+	tx, err := d.db.Tx(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if v := recover(); v != nil {
+			_ = tx.Rollback()
+			panic(v)
+		}
+	}()
+
+	if err = fn(tx); err != nil {
+		if rerr := tx.Rollback(); rerr != nil {
+			err = errors.Join(err, rerr)
+		}
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("committing transaction: %w", err)
+	}
+	return nil
 }

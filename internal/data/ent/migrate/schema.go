@@ -22,9 +22,9 @@ var (
 		PrimaryKey: []*schema.Column{FollowsColumns[0]},
 		Indexes: []*schema.Index{
 			{
-				Name:    "follow_user_id",
-				Unique:  false,
-				Columns: []*schema.Column{FollowsColumns[1]},
+				Name:    "follow_user_id_be_user_id",
+				Unique:  true,
+				Columns: []*schema.Column{FollowsColumns[1], FollowsColumns[2]},
 			},
 			{
 				Name:    "follow_be_user_id",

@@ -1,8 +1,13 @@
 
 ### profile info
+OPTIONS {{host}}/api/profiles/tom
+Origin: http://bd.com
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: Authorization
+
+### Get profile
 GET {{host}}/api/profiles/tom
 Authorization: {{token}}
-
 
 ### follow user
 POST {{host}}/api/profiles/tom/follow
