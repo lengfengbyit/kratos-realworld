@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	article "kratos-realworld/api/article/v1"
 	v1 "kratos-realworld/api/helloworld/v1"
 	profile "kratos-realworld/api/profile/v1"
 	user "kratos-realworld/api/user/v1"
@@ -34,7 +35,11 @@ func MatchRouter() selector.MatchFunc {
 }
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, userApi *service.UserApiService, profileApi *service.ProfileService, logger log.Logger) *http.Server {
+func NewHTTPServer(c *conf.Server, greeter *service.GreeterService,
+	userApi *service.UserApiService,
+	profileApi *service.ProfileService,
+	articleApi *service.ArticleService,
+	logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 
 		// 跨域设置
@@ -70,5 +75,6 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService, userApi *ser
 	v1.RegisterGreeterHTTPServer(srv, greeter)
 	user.RegisterUserApiHTTPServer(srv, userApi)
 	profile.RegisterProfileHTTPServer(srv, profileApi)
+	article.RegisterArticleHTTPServer(srv, articleApi)
 	return srv
 }

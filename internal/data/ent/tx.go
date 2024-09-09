@@ -12,6 +12,10 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// Article is the client for interacting with the Article builders.
+	Article *ArticleClient
+	// Favorite is the client for interacting with the Favorite builders.
+	Favorite *FavoriteClient
 	// Follow is the client for interacting with the Follow builders.
 	Follow *FollowClient
 	// User is the client for interacting with the User builders.
@@ -147,6 +151,8 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.Article = NewArticleClient(tx.config)
+	tx.Favorite = NewFavoriteClient(tx.config)
 	tx.Follow = NewFollowClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }
@@ -158,7 +164,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Follow.QueryXXX(), the query will be executed
+// applies a query, for example: Article.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

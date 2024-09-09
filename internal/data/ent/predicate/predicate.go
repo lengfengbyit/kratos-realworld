@@ -6,6 +6,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// Article is the predicate function for article builders.
+type Article func(*sql.Selector)
+
+// Favorite is the predicate function for favorite builders.
+type Favorite func(*sql.Selector)
+
 // Follow is the predicate function for follow builders.
 type Follow func(*sql.Selector)
 

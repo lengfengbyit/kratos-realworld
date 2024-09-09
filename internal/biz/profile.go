@@ -32,15 +32,36 @@ func NewProfileUsecase(repo UserRepo, followRepo FollowRepo, logger log.Logger) 
 	return &ProfileUsecase{userRepo: repo, followRepo: followRepo, log: log.NewHelper(logger)}
 }
 
+func (biz *ProfileUsecase) FindByUserId(ctx context.Context, beUserId int64) (*Profile, error) {
+
+	beUser, err := biz.userRepo.FindById(ctx, beUserId)
+	if err != nil {
+		return nil, err
+	}
+
+	// 当前用户 ID
+	userId, err := auth.GetUserId(ctx)
+
+	// 检查当前用户是否关注了被查询的用户
+	following := biz.followRepo.IsFollowing(ctx, userId, beUser.ID)
+	return &Profile{
+		ID:        beUser.ID,
+		Image:     beUser.Image,
+		Bio:       beUser.Bio,
+		Username:  beUser.Username,
+		Following: following,
+	}, nil
+}
+
 // FindByEmail finds the Profile by username.
-func (uc *ProfileUsecase) FindByUsername(ctx context.Context, username string) (*Profile, error) {
-	userId, beUser, err := uc.getUsers(ctx, username)
+func (biz *ProfileUsecase) FindByUsername(ctx context.Context, username string) (*Profile, error) {
+	userId, beUser, err := biz.getUsers(ctx, username)
 	if err != nil {
 		return nil, err
 	}
 
 	// 检查当前用户是否关注了被查询的用户
-	following := uc.followRepo.IsFollowing(ctx, userId, beUser.ID)
+	following := biz.followRepo.IsFollowing(ctx, userId, beUser.ID)
 	return &Profile{
 		ID:        beUser.ID,
 		Image:     beUser.Image,
@@ -50,14 +71,14 @@ func (uc *ProfileUsecase) FindByUsername(ctx context.Context, username string) (
 	}, nil
 }
 
-func (uc *ProfileUsecase) Follow(ctx context.Context, username string) (*Profile, error) {
-	userId, beUser, err := uc.getUsers(ctx, username)
+func (biz *ProfileUsecase) Follow(ctx context.Context, username string) (*Profile, error) {
+	userId, beUser, err := biz.getUsers(ctx, username)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = uc.followRepo.Follow(ctx, userId, beUser.ID)
-	following := uc.followRepo.IsFollowing(ctx, userId, beUser.ID)
+	_ = biz.followRepo.Follow(ctx, userId, beUser.ID)
+	following := biz.followRepo.IsFollowing(ctx, userId, beUser.ID)
 	return &Profile{
 		ID:        beUser.ID,
 		Image:     beUser.Image,
@@ -67,14 +88,14 @@ func (uc *ProfileUsecase) Follow(ctx context.Context, username string) (*Profile
 	}, nil
 }
 
-func (uc *ProfileUsecase) UnFollow(ctx context.Context, username string) (*Profile, error) {
-	userId, beUser, err := uc.getUsers(ctx, username)
+func (biz *ProfileUsecase) UnFollow(ctx context.Context, username string) (*Profile, error) {
+	userId, beUser, err := biz.getUsers(ctx, username)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = uc.followRepo.Unfollow(ctx, userId, beUser.ID)
-	following := uc.followRepo.IsFollowing(ctx, userId, beUser.ID)
+	_ = biz.followRepo.Unfollow(ctx, userId, beUser.ID)
+	following := biz.followRepo.IsFollowing(ctx, userId, beUser.ID)
 	return &Profile{
 		ID:        beUser.ID,
 		Image:     beUser.Image,
@@ -85,9 +106,9 @@ func (uc *ProfileUsecase) UnFollow(ctx context.Context, username string) (*Profi
 
 }
 
-func (uc *ProfileUsecase) getUsers(ctx context.Context, username string) (userId int64, beUser *User, err error) {
+func (biz *ProfileUsecase) getUsers(ctx context.Context, username string) (userId int64, beUser *User, err error) {
 	// 要查询的用户信息
-	beUser, err = uc.userRepo.FindByUsername(ctx, username)
+	beUser, err = biz.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return
 	}

@@ -3,16 +3,50 @@
 package ent
 
 import (
+	"kratos-realworld/internal/data/ent/article"
+	"kratos-realworld/internal/data/ent/favorite"
 	"kratos-realworld/internal/data/ent/follow"
 	"kratos-realworld/internal/data/ent/schema"
 	"kratos-realworld/internal/data/ent/user"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	articleFields := schema.Article{}.Fields()
+	_ = articleFields
+	// articleDescSlug is the schema descriptor for slug field.
+	articleDescSlug := articleFields[2].Descriptor()
+	// article.DefaultSlug holds the default value on creation for the slug field.
+	article.DefaultSlug = articleDescSlug.Default.(func() uuid.UUID)
+	// articleDescTitle is the schema descriptor for title field.
+	articleDescTitle := articleFields[3].Descriptor()
+	// article.TitleValidator is a validator for the "title" field. It is called by the builders before save.
+	article.TitleValidator = articleDescTitle.Validators[0].(func(string) error)
+	// articleDescDescription is the schema descriptor for description field.
+	articleDescDescription := articleFields[4].Descriptor()
+	// article.DefaultDescription holds the default value on creation for the description field.
+	article.DefaultDescription = articleDescDescription.Default.(string)
+	// articleDescCreatedAt is the schema descriptor for created_at field.
+	articleDescCreatedAt := articleFields[7].Descriptor()
+	// article.DefaultCreatedAt holds the default value on creation for the created_at field.
+	article.DefaultCreatedAt = articleDescCreatedAt.Default.(func() time.Time)
+	// articleDescUpdatedAt is the schema descriptor for updated_at field.
+	articleDescUpdatedAt := articleFields[8].Descriptor()
+	// article.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	article.DefaultUpdatedAt = articleDescUpdatedAt.Default.(func() time.Time)
+	// article.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	article.UpdateDefaultUpdatedAt = articleDescUpdatedAt.UpdateDefault.(func() time.Time)
+	favoriteFields := schema.Favorite{}.Fields()
+	_ = favoriteFields
+	// favoriteDescCreatedAt is the schema descriptor for created_at field.
+	favoriteDescCreatedAt := favoriteFields[2].Descriptor()
+	// favorite.DefaultCreatedAt holds the default value on creation for the created_at field.
+	favorite.DefaultCreatedAt = favoriteDescCreatedAt.Default.(func() time.Time)
 	followFields := schema.Follow{}.Fields()
 	_ = followFields
 	// followDescUserID is the schema descriptor for user_id field.

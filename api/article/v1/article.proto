@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+package api.article.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "kratos-realworld/api/article/v1;v1";
+
+service Article {
+  // 获取多篇文章，需要身份验证
+  rpc ListArticle (ListArticleRequest) returns (ListArticleReply){
+    option (google.api.http) = {
+      get: "/api/articles"
+    };
+  };
+
+  // 获取单篇文章，无需身份验证
+  rpc GetArticle (SlugRequest) returns (ArticleReply){
+    option (google.api.http) = {
+      get: "/api/articles/{slug}"
+    };
+  };
+
+  // 创建文章，需要身份验证
+  rpc CreateArticle (CreateArticleRequest) returns (ArticleReply) {
+    option (google.api.http) = {
+      post: "/api/articles"
+      body: "*"
+    };
+  };
+
+  // 更新文章，需要身份验证
+  rpc UpdateArticle (SaveArticleRequest) returns (ArticleReply){
+    option (google.api.http) = {
+      put: "/api/articles/{slug}"
+      body: "*"
+    };
+  };
+
+  // 删除文章，需要身份验证
+  rpc DeleteArticle (SlugRequest) returns (EmptyReply){
+    option (google.api.http) = {
+      delete: "/api/articles/{slug}"
+    };
+  };
+
+  // 返回关注用户的多篇文章，需要身份验证
+  rpc FeedArticle(ListArticleRequest) returns (ListArticleReply) {
+    option (google.api.http) = {
+      get: "/api/articles/feed"
+    };
+  };
+}
+
+message SlugRequest {
+  string slug = 1 [(validate.rules).string.min_len = 1];
+}
+
+message CreateArticleRequest {
+  message Article {
+    string title = 1 [(validate.rules).string.min_len = 1];
+    string description = 2 [(validate.rules).string = {ignore_empty:true}];
+    string body = 3 [(validate.rules).string = {ignore_empty:true}];
+    repeated string tagList = 4 [(validate.rules).repeated = {ignore_empty:true}];
+  }
+
+  Article article = 1 [(validate.rules).message.required = true];
+}
+
+
+message SaveArticleRequest {
+  message Article {
+    string title = 1 [(validate.rules).string = {ignore_empty:true, min_len: 1}];
+    string description = 2 [(validate.rules).string = {ignore_empty:true}];
+    string body = 3 [(validate.rules).string = {ignore_empty:true}];
+    repeated string tagList = 4 [(validate.rules).repeated = {ignore_empty:true}];
+  }
+
+  Article article = 1 [(validate.rules).message.required = true];
+  string slug = 2 [(validate.rules).string.min_len = 1];
+}
+
+
+message ListArticleRequest {
+  string tag = 1;
+  string author = 2;
+  bool favorited = 3;
+  uint32 limit = 4 [(validate.rules).uint32 = {ignore_empty:true, gt:0, lt:100}];
+  uint32 offset = 5 [(validate.rules).uint32 = {ignore_empty:true, gte:0}];
+}
+
+message ListArticleReply {
+  repeated ArticleReply articles = 1;
+  uint32 articlesCount = 2;
+}
+
+message Author {
+  string username = 1;
+  string bio = 2;
+  string image = 3;
+  bool following = 4;
+}
+
+message ArticleReply {
+  string slug = 1;
+  string title = 2;
+  string description = 3;
+  repeated string tagList = 4;
+  string createdAt = 5;
+  string updatedAt = 6;
+  bool favorited = 7;
+  uint32 favoritesCount = 8;
+  Author author = 9;
+}
+message EmptyReply {
+
+}

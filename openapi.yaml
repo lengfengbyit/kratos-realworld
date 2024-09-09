@@ -6,6 +6,157 @@ info:
     title: ""
     version: 0.0.1
 paths:
+    /api/articles:
+        get:
+            tags:
+                - Article
+            description: 获取多篇文章，需要身份验证
+            operationId: Article_ListArticle
+            parameters:
+                - name: tag
+                  in: query
+                  schema:
+                    type: string
+                - name: author
+                  in: query
+                  schema:
+                    type: string
+                - name: favorited
+                  in: query
+                  schema:
+                    type: boolean
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: offset
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.article.v1.ListArticleReply'
+        post:
+            tags:
+                - Article
+            description: 创建文章，需要身份验证
+            operationId: Article_CreateArticle
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.article.v1.CreateArticleRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.article.v1.ArticleReply'
+    /api/articles/feed:
+        get:
+            tags:
+                - Article
+            description: 返回关注用户的多篇文章，需要身份验证
+            operationId: Article_FeedArticle
+            parameters:
+                - name: tag
+                  in: query
+                  schema:
+                    type: string
+                - name: author
+                  in: query
+                  schema:
+                    type: string
+                - name: favorited
+                  in: query
+                  schema:
+                    type: boolean
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: offset
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.article.v1.ListArticleReply'
+    /api/articles/{slug}:
+        get:
+            tags:
+                - Article
+            description: 获取单篇文章，无需身份验证
+            operationId: Article_GetArticle
+            parameters:
+                - name: slug
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.article.v1.ArticleReply'
+        put:
+            tags:
+                - Article
+            description: 更新文章，需要身份验证
+            operationId: Article_UpdateArticle
+            parameters:
+                - name: slug
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.article.v1.SaveArticleRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.article.v1.ArticleReply'
+        delete:
+            tags:
+                - Article
+            description: 删除文章，需要身份验证
+            operationId: Article_DeleteArticle
+            parameters:
+                - name: slug
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.article.v1.EmptyReply'
     /api/profiles/{username}:
         get:
             tags:
@@ -151,6 +302,92 @@ paths:
                                 $ref: '#/components/schemas/helloworld.v1.HelloReply'
 components:
     schemas:
+        api.article.v1.ArticleReply:
+            type: object
+            properties:
+                slug:
+                    type: string
+                title:
+                    type: string
+                description:
+                    type: string
+                tagList:
+                    type: array
+                    items:
+                        type: string
+                createdAt:
+                    type: string
+                updatedAt:
+                    type: string
+                favorited:
+                    type: boolean
+                favoritesCount:
+                    type: integer
+                    format: uint32
+                author:
+                    $ref: '#/components/schemas/api.article.v1.Author'
+        api.article.v1.Author:
+            type: object
+            properties:
+                username:
+                    type: string
+                bio:
+                    type: string
+                image:
+                    type: string
+                following:
+                    type: boolean
+        api.article.v1.CreateArticleRequest:
+            type: object
+            properties:
+                article:
+                    $ref: '#/components/schemas/api.article.v1.CreateArticleRequest_Article'
+        api.article.v1.CreateArticleRequest_Article:
+            type: object
+            properties:
+                title:
+                    type: string
+                description:
+                    type: string
+                body:
+                    type: string
+                tagList:
+                    type: array
+                    items:
+                        type: string
+        api.article.v1.EmptyReply:
+            type: object
+            properties: {}
+        api.article.v1.ListArticleReply:
+            type: object
+            properties:
+                articles:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.article.v1.ArticleReply'
+                articlesCount:
+                    type: integer
+                    format: uint32
+        api.article.v1.SaveArticleRequest:
+            type: object
+            properties:
+                article:
+                    $ref: '#/components/schemas/api.article.v1.SaveArticleRequest_Article'
+                slug:
+                    type: string
+        api.article.v1.SaveArticleRequest_Article:
+            type: object
+            properties:
+                title:
+                    type: string
+                description:
+                    type: string
+                body:
+                    type: string
+                tagList:
+                    type: array
+                    items:
+                        type: string
         helloworld.v1.HelloReply:
             type: object
             properties:
@@ -239,6 +476,7 @@ components:
                 user:
                     $ref: '#/components/schemas/user.v1.User'
 tags:
+    - name: Article
     - name: Greeter
       description: The greeting service definition.
     - name: Profile
