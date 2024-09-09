@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"kratos-realworld/internal/biz"
+	"kratos-realworld/internal/data/ent"
 	"kratos-realworld/internal/data/ent/article"
 	"strings"
 
@@ -60,7 +61,7 @@ func (repo *articleRepo) UpdateArticle(ctx context.Context, g *biz.Article) (int
 }
 
 func (repo *articleRepo) GetArticle(ctx context.Context, slug uuid.UUID) (*biz.Article, error) {
-	info, err := repo.data.db.Article.Query().Where(article.SlugEQ(slug)).First(ctx)
+	info, err := repo.data.db.Article.Query().WithAuthor().Where(article.SlugEQ(slug)).First(ctx)
 
 	var art biz.Article
 	if err = copier.Copy(&art, info); err != nil {
@@ -70,6 +71,31 @@ func (repo *articleRepo) GetArticle(ctx context.Context, slug uuid.UUID) (*biz.A
 }
 
 func (repo *articleRepo) ListArticle(ctx context.Context, g *biz.Article, tag string, limit, offset int) ([]*biz.Article, error) {
+	query := repo.buildQuery(tag, g)
+
+	list, err := query.WithAuthor().
+		Limit(limit).Offset(offset).
+		Order(ent.Desc(article.FieldID)).
+		All(ctx)
+
+	var lstArticle = make([]*biz.Article, 0, len(list))
+
+	if err = copier.Copy(&lstArticle, list); err != nil {
+		return nil, err
+	}
+	return lstArticle, err
+}
+
+func (repo *articleRepo) CountArticle(ctx context.Context, g *biz.Article, tag string) (int, error) {
+	query := repo.buildQuery(tag, g)
+	return query.Count(ctx)
+}
+
+func (repo *articleRepo) DeleteArticle(ctx context.Context, slug uuid.UUID) (int, error) {
+	return repo.data.db.Article.Delete().Where(article.SlugEQ(slug)).Exec(ctx)
+}
+
+func (repo *articleRepo) buildQuery(tag string, g *biz.Article) *ent.ArticleQuery {
 	query := repo.data.db.Article.Query()
 
 	if g.Title != "" {
@@ -83,17 +109,5 @@ func (repo *articleRepo) ListArticle(ctx context.Context, g *biz.Article, tag st
 	if tag != "" {
 		query.Where(article.TagsContains(tag))
 	}
-
-	list, err := query.Limit(limit).Offset(offset).All(ctx)
-
-	var lstArticle = make([]*biz.Article, 0, len(list))
-
-	if err = copier.Copy(&lstArticle, list); err != nil {
-		return nil, err
-	}
-	return lstArticle, err
-}
-
-func (repo *articleRepo) DeleteArticle(ctx context.Context, slug uuid.UUID) (int, error) {
-	return repo.data.db.Article.Delete().Where(article.SlugEQ(slug)).Exec(ctx)
+	return query
 }

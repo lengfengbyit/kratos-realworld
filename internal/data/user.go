@@ -21,9 +21,6 @@ func NewUserRepo(data *Data, logger log.Logger) biz.UserRepo {
 		log:  log.NewHelper(logger),
 	}
 }
-func (r *userRepo) Login(ctx context.Context, user *biz.User) (*biz.User, error) {
-	return user, nil
-}
 
 func (r *userRepo) Save(ctx context.Context, g *biz.User) (*biz.User, error) {
 	info, err := r.data.db.User.

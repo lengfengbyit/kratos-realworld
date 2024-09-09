@@ -39,13 +39,13 @@ func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
 	sqlDriver := dialect.DebugWithContext(drv, func(ctx context.Context, a ...any) {
 		if c.Database.Debug {
 			lh.Info(a...)
+			tracer := otel.Tracer("ent.")
+			kind := trace.SpanKindServer
+			_, span := tracer.Start(ctx, "Query",
+				trace.WithAttributes(attribute.String("sql", fmt.Sprint(a...))),
+				trace.WithSpanKind(kind))
+			span.End()
 		}
-		tracer := otel.Tracer("ent.")
-		kind := trace.SpanKindServer
-		_, span := tracer.Start(ctx, "Query",
-			trace.WithAttributes(attribute.String("sql", fmt.Sprint(a...))),
-			trace.WithSpanKind(kind))
-		span.End()
 	})
 
 	client := ent.NewClient(ent.Driver(sqlDriver))

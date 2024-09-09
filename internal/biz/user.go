@@ -27,7 +27,6 @@ type UserRepo interface {
 	FindByEmail(context.Context, string) (*User, error)
 	FindByUsername(context.Context, string) (*User, error)
 	FindIdByUsername(context.Context, string) (int64, error)
-	Login(context.Context, *User) (*User, error)
 	FindById(context.Context, int64) (*User, error)
 }
 

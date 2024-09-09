@@ -18,8 +18,8 @@ type Article struct {
 // Fields of the Article.
 func (Article) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int64("id"), // 会自动设置为主键
-		field.Int64("author_id"),
+		field.Int64("id"),                                 // 会自动设置为主键
+		field.Int64("author_id").Optional(),               // 外键字段必须是可选的
 		field.UUID("slug", uuid.UUID{}).Default(uuid.New), // uuid 用于接口搜索
 		field.String("title").NotEmpty(),
 		field.String("description").Default(""),
@@ -39,6 +39,10 @@ func (Article) Indexes() []ent.Index {
 // Edges of the Article.
 func (Article) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.From("owner", User.Type).Ref("articles").Unique(),
+		// 关联用户表
+		// Form：第一个参数决定生成的关联关系方法名，如：QueryAuthor()、WithAuthor()
+		// Ref：引用 user 中的那个关系
+		// Field：指定关联外键字段, 外键字段必须是可选的
+		edge.From("author", User.Type).Ref("articles").Unique().Field("author_id"),
 	}
 }

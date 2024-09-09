@@ -32,7 +32,6 @@ func (au *ArticleUpdate) Where(ps ...predicate.Article) *ArticleUpdate {
 
 // SetAuthorID sets the "author_id" field.
 func (au *ArticleUpdate) SetAuthorID(i int64) *ArticleUpdate {
-	au.mutation.ResetAuthorID()
 	au.mutation.SetAuthorID(i)
 	return au
 }
@@ -45,9 +44,9 @@ func (au *ArticleUpdate) SetNillableAuthorID(i *int64) *ArticleUpdate {
 	return au
 }
 
-// AddAuthorID adds i to the "author_id" field.
-func (au *ArticleUpdate) AddAuthorID(i int64) *ArticleUpdate {
-	au.mutation.AddAuthorID(i)
+// ClearAuthorID clears the value of the "author_id" field.
+func (au *ArticleUpdate) ClearAuthorID() *ArticleUpdate {
+	au.mutation.ClearAuthorID()
 	return au
 }
 
@@ -141,23 +140,9 @@ func (au *ArticleUpdate) SetUpdatedAt(t time.Time) *ArticleUpdate {
 	return au
 }
 
-// SetOwnerID sets the "owner" edge to the User entity by ID.
-func (au *ArticleUpdate) SetOwnerID(id int64) *ArticleUpdate {
-	au.mutation.SetOwnerID(id)
-	return au
-}
-
-// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
-func (au *ArticleUpdate) SetNillableOwnerID(id *int64) *ArticleUpdate {
-	if id != nil {
-		au = au.SetOwnerID(*id)
-	}
-	return au
-}
-
-// SetOwner sets the "owner" edge to the User entity.
-func (au *ArticleUpdate) SetOwner(u *User) *ArticleUpdate {
-	return au.SetOwnerID(u.ID)
+// SetAuthor sets the "author" edge to the User entity.
+func (au *ArticleUpdate) SetAuthor(u *User) *ArticleUpdate {
+	return au.SetAuthorID(u.ID)
 }
 
 // Mutation returns the ArticleMutation object of the builder.
@@ -165,9 +150,9 @@ func (au *ArticleUpdate) Mutation() *ArticleMutation {
 	return au.mutation
 }
 
-// ClearOwner clears the "owner" edge to the User entity.
-func (au *ArticleUpdate) ClearOwner() *ArticleUpdate {
-	au.mutation.ClearOwner()
+// ClearAuthor clears the "author" edge to the User entity.
+func (au *ArticleUpdate) ClearAuthor() *ArticleUpdate {
+	au.mutation.ClearAuthor()
 	return au
 }
 
@@ -229,12 +214,6 @@ func (au *ArticleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := au.mutation.AuthorID(); ok {
-		_spec.SetField(article.FieldAuthorID, field.TypeInt64, value)
-	}
-	if value, ok := au.mutation.AddedAuthorID(); ok {
-		_spec.AddField(article.FieldAuthorID, field.TypeInt64, value)
-	}
 	if value, ok := au.mutation.Slug(); ok {
 		_spec.SetField(article.FieldSlug, field.TypeUUID, value)
 	}
@@ -256,12 +235,12 @@ func (au *ArticleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := au.mutation.UpdatedAt(); ok {
 		_spec.SetField(article.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if au.mutation.OwnerCleared() {
+	if au.mutation.AuthorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   article.OwnerTable,
-			Columns: []string{article.OwnerColumn},
+			Table:   article.AuthorTable,
+			Columns: []string{article.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
@@ -269,12 +248,12 @@ func (au *ArticleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.OwnerIDs(); len(nodes) > 0 {
+	if nodes := au.mutation.AuthorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   article.OwnerTable,
-			Columns: []string{article.OwnerColumn},
+			Table:   article.AuthorTable,
+			Columns: []string{article.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
@@ -307,7 +286,6 @@ type ArticleUpdateOne struct {
 
 // SetAuthorID sets the "author_id" field.
 func (auo *ArticleUpdateOne) SetAuthorID(i int64) *ArticleUpdateOne {
-	auo.mutation.ResetAuthorID()
 	auo.mutation.SetAuthorID(i)
 	return auo
 }
@@ -320,9 +298,9 @@ func (auo *ArticleUpdateOne) SetNillableAuthorID(i *int64) *ArticleUpdateOne {
 	return auo
 }
 
-// AddAuthorID adds i to the "author_id" field.
-func (auo *ArticleUpdateOne) AddAuthorID(i int64) *ArticleUpdateOne {
-	auo.mutation.AddAuthorID(i)
+// ClearAuthorID clears the value of the "author_id" field.
+func (auo *ArticleUpdateOne) ClearAuthorID() *ArticleUpdateOne {
+	auo.mutation.ClearAuthorID()
 	return auo
 }
 
@@ -416,23 +394,9 @@ func (auo *ArticleUpdateOne) SetUpdatedAt(t time.Time) *ArticleUpdateOne {
 	return auo
 }
 
-// SetOwnerID sets the "owner" edge to the User entity by ID.
-func (auo *ArticleUpdateOne) SetOwnerID(id int64) *ArticleUpdateOne {
-	auo.mutation.SetOwnerID(id)
-	return auo
-}
-
-// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
-func (auo *ArticleUpdateOne) SetNillableOwnerID(id *int64) *ArticleUpdateOne {
-	if id != nil {
-		auo = auo.SetOwnerID(*id)
-	}
-	return auo
-}
-
-// SetOwner sets the "owner" edge to the User entity.
-func (auo *ArticleUpdateOne) SetOwner(u *User) *ArticleUpdateOne {
-	return auo.SetOwnerID(u.ID)
+// SetAuthor sets the "author" edge to the User entity.
+func (auo *ArticleUpdateOne) SetAuthor(u *User) *ArticleUpdateOne {
+	return auo.SetAuthorID(u.ID)
 }
 
 // Mutation returns the ArticleMutation object of the builder.
@@ -440,9 +404,9 @@ func (auo *ArticleUpdateOne) Mutation() *ArticleMutation {
 	return auo.mutation
 }
 
-// ClearOwner clears the "owner" edge to the User entity.
-func (auo *ArticleUpdateOne) ClearOwner() *ArticleUpdateOne {
-	auo.mutation.ClearOwner()
+// ClearAuthor clears the "author" edge to the User entity.
+func (auo *ArticleUpdateOne) ClearAuthor() *ArticleUpdateOne {
+	auo.mutation.ClearAuthor()
 	return auo
 }
 
@@ -534,12 +498,6 @@ func (auo *ArticleUpdateOne) sqlSave(ctx context.Context) (_node *Article, err e
 			}
 		}
 	}
-	if value, ok := auo.mutation.AuthorID(); ok {
-		_spec.SetField(article.FieldAuthorID, field.TypeInt64, value)
-	}
-	if value, ok := auo.mutation.AddedAuthorID(); ok {
-		_spec.AddField(article.FieldAuthorID, field.TypeInt64, value)
-	}
 	if value, ok := auo.mutation.Slug(); ok {
 		_spec.SetField(article.FieldSlug, field.TypeUUID, value)
 	}
@@ -561,12 +519,12 @@ func (auo *ArticleUpdateOne) sqlSave(ctx context.Context) (_node *Article, err e
 	if value, ok := auo.mutation.UpdatedAt(); ok {
 		_spec.SetField(article.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if auo.mutation.OwnerCleared() {
+	if auo.mutation.AuthorCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   article.OwnerTable,
-			Columns: []string{article.OwnerColumn},
+			Table:   article.AuthorTable,
+			Columns: []string{article.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
@@ -574,12 +532,12 @@ func (auo *ArticleUpdateOne) sqlSave(ctx context.Context) (_node *Article, err e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.OwnerIDs(); len(nodes) > 0 {
+	if nodes := auo.mutation.AuthorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   article.OwnerTable,
-			Columns: []string{article.OwnerColumn},
+			Table:   article.AuthorTable,
+			Columns: []string{article.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),

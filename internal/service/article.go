@@ -46,12 +46,17 @@ func (s *ArticleService) ListArticle(ctx context.Context, req *pb.ListArticleReq
 		artParams.AuthorId = profile.ID
 	}
 
-	articles, err := s.biz.ListArticle(ctx, &artParams, req.Tag, int(req.Limit), int(req.Offset))
+	total, articles, err := s.biz.ListArticle(ctx, &artParams, req.Tag, int(req.Limit), int(req.Offset))
 	if err != nil {
 		return nil, err
 	}
 
-	return s.appendAuthors(ctx, articles)
+	var articlesReply = make([]*pb.ArticleReply, len(articles))
+	if err = copier.Copy(&articlesReply, articles); err != nil {
+		return nil, err
+	}
+
+	return &pb.ListArticleReply{Articles: articlesReply, ArticlesCount: uint32(total)}, nil
 }
 func (s *ArticleService) GetArticle(ctx context.Context, req *pb.SlugRequest) (*pb.ArticleReply, error) {
 	article, err := s.biz.GetArticle(ctx, req.Slug)
@@ -72,7 +77,7 @@ func (s *ArticleService) GetArticle(ctx context.Context, req *pb.SlugRequest) (*
 	articleReply.CreatedAt = article.CreatedAt.Format(time.DateTime)
 	articleReply.UpdatedAt = article.UpdatedAt.Format(time.DateTime)
 
-	return s.appendAuthor(ctx, article.AuthorId, &articleReply)
+	return &articleReply, nil
 }
 func (s *ArticleService) CreateArticle(ctx context.Context, req *pb.CreateArticleRequest) (*pb.ArticleReply, error) {
 	var articleParams biz.Article
@@ -145,23 +150,4 @@ func (s *ArticleService) appendAuthor(ctx context.Context, authorId int64, artic
 	articleReply.Author = author
 
 	return articleReply, nil
-}
-
-func (s *ArticleService) appendAuthors(ctx context.Context, articles []*biz.Article) (*pb.ListArticleReply, error) {
-	var err error
-	var articlesReply = make([]*pb.ArticleReply, len(articles))
-	for i, article := range articles {
-		var reply pb.ArticleReply
-		if err = copier.Copy(&reply, article); err != nil {
-			return nil, err
-		}
-		author, err := s.GetAuthor(ctx, article.AuthorId)
-		if err != nil {
-			s.log.Errorf("failed to get author: %v", err)
-		}
-		reply.Author = author
-		articlesReply[i] = &reply
-	}
-
-	return &pb.ListArticleReply{Articles: articlesReply}, nil
 }

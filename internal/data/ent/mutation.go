@@ -40,8 +40,6 @@ type ArticleMutation struct {
 	op            Op
 	typ           string
 	id            *int64
-	author_id     *int64
-	addauthor_id  *int64
 	slug          *uuid.UUID
 	title         *string
 	description   *string
@@ -50,8 +48,8 @@ type ArticleMutation struct {
 	created_at    *time.Time
 	updated_at    *time.Time
 	clearedFields map[string]struct{}
-	owner         *int64
-	clearedowner  bool
+	author        *int64
+	clearedauthor bool
 	done          bool
 	oldValue      func(context.Context) (*Article, error)
 	predicates    []predicate.Article
@@ -163,13 +161,12 @@ func (m *ArticleMutation) IDs(ctx context.Context) ([]int64, error) {
 
 // SetAuthorID sets the "author_id" field.
 func (m *ArticleMutation) SetAuthorID(i int64) {
-	m.author_id = &i
-	m.addauthor_id = nil
+	m.author = &i
 }
 
 // AuthorID returns the value of the "author_id" field in the mutation.
 func (m *ArticleMutation) AuthorID() (r int64, exists bool) {
-	v := m.author_id
+	v := m.author
 	if v == nil {
 		return
 	}
@@ -193,28 +190,22 @@ func (m *ArticleMutation) OldAuthorID(ctx context.Context) (v int64, err error) 
 	return oldValue.AuthorID, nil
 }
 
-// AddAuthorID adds i to the "author_id" field.
-func (m *ArticleMutation) AddAuthorID(i int64) {
-	if m.addauthor_id != nil {
-		*m.addauthor_id += i
-	} else {
-		m.addauthor_id = &i
-	}
+// ClearAuthorID clears the value of the "author_id" field.
+func (m *ArticleMutation) ClearAuthorID() {
+	m.author = nil
+	m.clearedFields[article.FieldAuthorID] = struct{}{}
 }
 
-// AddedAuthorID returns the value that was added to the "author_id" field in this mutation.
-func (m *ArticleMutation) AddedAuthorID() (r int64, exists bool) {
-	v := m.addauthor_id
-	if v == nil {
-		return
-	}
-	return *v, true
+// AuthorIDCleared returns if the "author_id" field was cleared in this mutation.
+func (m *ArticleMutation) AuthorIDCleared() bool {
+	_, ok := m.clearedFields[article.FieldAuthorID]
+	return ok
 }
 
 // ResetAuthorID resets all changes to the "author_id" field.
 func (m *ArticleMutation) ResetAuthorID() {
-	m.author_id = nil
-	m.addauthor_id = nil
+	m.author = nil
+	delete(m.clearedFields, article.FieldAuthorID)
 }
 
 // SetSlug sets the "slug" field.
@@ -469,43 +460,31 @@ func (m *ArticleMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetOwnerID sets the "owner" edge to the User entity by id.
-func (m *ArticleMutation) SetOwnerID(id int64) {
-	m.owner = &id
+// ClearAuthor clears the "author" edge to the User entity.
+func (m *ArticleMutation) ClearAuthor() {
+	m.clearedauthor = true
+	m.clearedFields[article.FieldAuthorID] = struct{}{}
 }
 
-// ClearOwner clears the "owner" edge to the User entity.
-func (m *ArticleMutation) ClearOwner() {
-	m.clearedowner = true
+// AuthorCleared reports if the "author" edge to the User entity was cleared.
+func (m *ArticleMutation) AuthorCleared() bool {
+	return m.AuthorIDCleared() || m.clearedauthor
 }
 
-// OwnerCleared reports if the "owner" edge to the User entity was cleared.
-func (m *ArticleMutation) OwnerCleared() bool {
-	return m.clearedowner
-}
-
-// OwnerID returns the "owner" edge ID in the mutation.
-func (m *ArticleMutation) OwnerID() (id int64, exists bool) {
-	if m.owner != nil {
-		return *m.owner, true
-	}
-	return
-}
-
-// OwnerIDs returns the "owner" edge IDs in the mutation.
+// AuthorIDs returns the "author" edge IDs in the mutation.
 // Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
-// OwnerID instead. It exists only for internal usage by the builders.
-func (m *ArticleMutation) OwnerIDs() (ids []int64) {
-	if id := m.owner; id != nil {
+// AuthorID instead. It exists only for internal usage by the builders.
+func (m *ArticleMutation) AuthorIDs() (ids []int64) {
+	if id := m.author; id != nil {
 		ids = append(ids, *id)
 	}
 	return
 }
 
-// ResetOwner resets all changes to the "owner" edge.
-func (m *ArticleMutation) ResetOwner() {
-	m.owner = nil
-	m.clearedowner = false
+// ResetAuthor resets all changes to the "author" edge.
+func (m *ArticleMutation) ResetAuthor() {
+	m.author = nil
+	m.clearedauthor = false
 }
 
 // Where appends a list predicates to the ArticleMutation builder.
@@ -543,7 +522,7 @@ func (m *ArticleMutation) Type() string {
 // AddedFields().
 func (m *ArticleMutation) Fields() []string {
 	fields := make([]string, 0, 8)
-	if m.author_id != nil {
+	if m.author != nil {
 		fields = append(fields, article.FieldAuthorID)
 	}
 	if m.slug != nil {
@@ -689,9 +668,6 @@ func (m *ArticleMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *ArticleMutation) AddedFields() []string {
 	var fields []string
-	if m.addauthor_id != nil {
-		fields = append(fields, article.FieldAuthorID)
-	}
 	return fields
 }
 
@@ -700,8 +676,6 @@ func (m *ArticleMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *ArticleMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case article.FieldAuthorID:
-		return m.AddedAuthorID()
 	}
 	return nil, false
 }
@@ -711,13 +685,6 @@ func (m *ArticleMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ArticleMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case article.FieldAuthorID:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddAuthorID(v)
-		return nil
 	}
 	return fmt.Errorf("unknown Article numeric field %s", name)
 }
@@ -725,7 +692,11 @@ func (m *ArticleMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *ArticleMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(article.FieldAuthorID) {
+		fields = append(fields, article.FieldAuthorID)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -738,6 +709,11 @@ func (m *ArticleMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *ArticleMutation) ClearField(name string) error {
+	switch name {
+	case article.FieldAuthorID:
+		m.ClearAuthorID()
+		return nil
+	}
 	return fmt.Errorf("unknown Article nullable field %s", name)
 }
 
@@ -776,8 +752,8 @@ func (m *ArticleMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ArticleMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.owner != nil {
-		edges = append(edges, article.EdgeOwner)
+	if m.author != nil {
+		edges = append(edges, article.EdgeAuthor)
 	}
 	return edges
 }
@@ -786,8 +762,8 @@ func (m *ArticleMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *ArticleMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case article.EdgeOwner:
-		if id := m.owner; id != nil {
+	case article.EdgeAuthor:
+		if id := m.author; id != nil {
 			return []ent.Value{*id}
 		}
 	}
@@ -809,8 +785,8 @@ func (m *ArticleMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ArticleMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.clearedowner {
-		edges = append(edges, article.EdgeOwner)
+	if m.clearedauthor {
+		edges = append(edges, article.EdgeAuthor)
 	}
 	return edges
 }
@@ -819,8 +795,8 @@ func (m *ArticleMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *ArticleMutation) EdgeCleared(name string) bool {
 	switch name {
-	case article.EdgeOwner:
-		return m.clearedowner
+	case article.EdgeAuthor:
+		return m.clearedauthor
 	}
 	return false
 }
@@ -829,8 +805,8 @@ func (m *ArticleMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *ArticleMutation) ClearEdge(name string) error {
 	switch name {
-	case article.EdgeOwner:
-		m.ClearOwner()
+	case article.EdgeAuthor:
+		m.ClearAuthor()
 		return nil
 	}
 	return fmt.Errorf("unknown Article unique edge %s", name)
@@ -840,8 +816,8 @@ func (m *ArticleMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *ArticleMutation) ResetEdge(name string) error {
 	switch name {
-	case article.EdgeOwner:
-		m.ResetOwner()
+	case article.EdgeAuthor:
+		m.ResetAuthor()
 		return nil
 	}
 	return fmt.Errorf("unknown Article edge %s", name)

@@ -116,24 +116,14 @@ func AuthorIDNotIn(vs ...int64) predicate.Article {
 	return predicate.Article(sql.FieldNotIn(FieldAuthorID, vs...))
 }
 
-// AuthorIDGT applies the GT predicate on the "author_id" field.
-func AuthorIDGT(v int64) predicate.Article {
-	return predicate.Article(sql.FieldGT(FieldAuthorID, v))
+// AuthorIDIsNil applies the IsNil predicate on the "author_id" field.
+func AuthorIDIsNil() predicate.Article {
+	return predicate.Article(sql.FieldIsNull(FieldAuthorID))
 }
 
-// AuthorIDGTE applies the GTE predicate on the "author_id" field.
-func AuthorIDGTE(v int64) predicate.Article {
-	return predicate.Article(sql.FieldGTE(FieldAuthorID, v))
-}
-
-// AuthorIDLT applies the LT predicate on the "author_id" field.
-func AuthorIDLT(v int64) predicate.Article {
-	return predicate.Article(sql.FieldLT(FieldAuthorID, v))
-}
-
-// AuthorIDLTE applies the LTE predicate on the "author_id" field.
-func AuthorIDLTE(v int64) predicate.Article {
-	return predicate.Article(sql.FieldLTE(FieldAuthorID, v))
+// AuthorIDNotNil applies the NotNil predicate on the "author_id" field.
+func AuthorIDNotNil() predicate.Article {
+	return predicate.Article(sql.FieldNotNull(FieldAuthorID))
 }
 
 // SlugEQ applies the EQ predicate on the "slug" field.
@@ -516,21 +506,21 @@ func UpdatedAtLTE(v time.Time) predicate.Article {
 	return predicate.Article(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
-// HasOwner applies the HasEdge predicate on the "owner" edge.
-func HasOwner() predicate.Article {
+// HasAuthor applies the HasEdge predicate on the "author" edge.
+func HasAuthor() predicate.Article {
 	return predicate.Article(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, AuthorTable, AuthorColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasOwnerWith applies the HasEdge predicate on the "owner" edge with a given conditions (other predicates).
-func HasOwnerWith(preds ...predicate.User) predicate.Article {
+// HasAuthorWith applies the HasEdge predicate on the "author" edge with a given conditions (other predicates).
+func HasAuthorWith(preds ...predicate.User) predicate.Article {
 	return predicate.Article(func(s *sql.Selector) {
-		step := newOwnerStep()
+		step := newAuthorStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

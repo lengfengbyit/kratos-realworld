@@ -23,8 +23,7 @@ type ArticleQuery struct {
 	order      []article.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Article
-	withOwner  *UserQuery
-	withFKs    bool
+	withAuthor *UserQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -61,8 +60,8 @@ func (aq *ArticleQuery) Order(o ...article.OrderOption) *ArticleQuery {
 	return aq
 }
 
-// QueryOwner chains the current query on the "owner" edge.
-func (aq *ArticleQuery) QueryOwner() *UserQuery {
+// QueryAuthor chains the current query on the "author" edge.
+func (aq *ArticleQuery) QueryAuthor() *UserQuery {
 	query := (&UserClient{config: aq.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := aq.prepareQuery(ctx); err != nil {
@@ -75,7 +74,7 @@ func (aq *ArticleQuery) QueryOwner() *UserQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(article.Table, article.FieldID, selector),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, article.OwnerTable, article.OwnerColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, article.AuthorTable, article.AuthorColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -275,21 +274,21 @@ func (aq *ArticleQuery) Clone() *ArticleQuery {
 		order:      append([]article.OrderOption{}, aq.order...),
 		inters:     append([]Interceptor{}, aq.inters...),
 		predicates: append([]predicate.Article{}, aq.predicates...),
-		withOwner:  aq.withOwner.Clone(),
+		withAuthor: aq.withAuthor.Clone(),
 		// clone intermediate query.
 		sql:  aq.sql.Clone(),
 		path: aq.path,
 	}
 }
 
-// WithOwner tells the query-builder to eager-load the nodes that are connected to
-// the "owner" edge. The optional arguments are used to configure the query builder of the edge.
-func (aq *ArticleQuery) WithOwner(opts ...func(*UserQuery)) *ArticleQuery {
+// WithAuthor tells the query-builder to eager-load the nodes that are connected to
+// the "author" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *ArticleQuery) WithAuthor(opts ...func(*UserQuery)) *ArticleQuery {
 	query := (&UserClient{config: aq.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	aq.withOwner = query
+	aq.withAuthor = query
 	return aq
 }
 
@@ -370,18 +369,11 @@ func (aq *ArticleQuery) prepareQuery(ctx context.Context) error {
 func (aq *ArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Article, error) {
 	var (
 		nodes       = []*Article{}
-		withFKs     = aq.withFKs
 		_spec       = aq.querySpec()
 		loadedTypes = [1]bool{
-			aq.withOwner != nil,
+			aq.withAuthor != nil,
 		}
 	)
-	if aq.withOwner != nil {
-		withFKs = true
-	}
-	if withFKs {
-		_spec.Node.Columns = append(_spec.Node.Columns, article.ForeignKeys...)
-	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Article).scanValues(nil, columns)
 	}
@@ -400,23 +392,20 @@ func (aq *ArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Arti
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := aq.withOwner; query != nil {
-		if err := aq.loadOwner(ctx, query, nodes, nil,
-			func(n *Article, e *User) { n.Edges.Owner = e }); err != nil {
+	if query := aq.withAuthor; query != nil {
+		if err := aq.loadAuthor(ctx, query, nodes, nil,
+			func(n *Article, e *User) { n.Edges.Author = e }); err != nil {
 			return nil, err
 		}
 	}
 	return nodes, nil
 }
 
-func (aq *ArticleQuery) loadOwner(ctx context.Context, query *UserQuery, nodes []*Article, init func(*Article), assign func(*Article, *User)) error {
+func (aq *ArticleQuery) loadAuthor(ctx context.Context, query *UserQuery, nodes []*Article, init func(*Article), assign func(*Article, *User)) error {
 	ids := make([]int64, 0, len(nodes))
 	nodeids := make(map[int64][]*Article)
 	for i := range nodes {
-		if nodes[i].user_articles == nil {
-			continue
-		}
-		fk := *nodes[i].user_articles
+		fk := nodes[i].AuthorID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -433,7 +422,7 @@ func (aq *ArticleQuery) loadOwner(ctx context.Context, query *UserQuery, nodes [
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_articles" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "author_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -466,6 +455,9 @@ func (aq *ArticleQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != article.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if aq.withAuthor != nil {
+			_spec.Node.AddColumnOnce(article.FieldAuthorID)
 		}
 	}
 	if ps := aq.predicates; len(ps) > 0 {

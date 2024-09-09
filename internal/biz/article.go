@@ -2,12 +2,14 @@ package biz
 
 import (
 	"context"
+	"kratos-realworld/internal/data/ent"
 	"strings"
 	"time"
 
 	"github.com/go-kratos/kratos/v2/errors"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 )
 
 var (
@@ -42,6 +44,16 @@ func (a *Article) Tags(tags string) {
 	a.TagList = strings.Split(tags, ",")
 }
 
+func (a *Article) Edges(edges ent.ArticleEdges) {
+	if edges.Author != nil {
+		var author Author
+		if err := copier.Copy(&author, edges.Author); err != nil {
+			return
+		}
+		a.Author = &author
+	}
+}
+
 // ArticleRepo interface, 定义 data 层的接口
 type ArticleRepo interface {
 	CreateArticle(ctx context.Context, g *Article) (*Article, error)
@@ -49,6 +61,7 @@ type ArticleRepo interface {
 	GetArticle(ctx context.Context, slug uuid.UUID) (*Article, error)
 	ListArticle(ctx context.Context, g *Article, tag string, limit, offset int) ([]*Article, error)
 	DeleteArticle(ctx context.Context, slug uuid.UUID) (int, error)
+	CountArticle(ctx context.Context, g *Article, tag string) (int, error)
 }
 
 // ArticleUsecase 业务层的操作
@@ -78,8 +91,18 @@ func (a *ArticleUsecase) GetArticle(ctx context.Context, slug string) (*Article,
 	return a.repo.GetArticle(ctx, slugUUID)
 }
 
-func (a *ArticleUsecase) ListArticle(ctx context.Context, g *Article, tag string, limit, offset int) ([]*Article, error) {
-	return a.repo.ListArticle(ctx, g, tag, limit, offset)
+func (a *ArticleUsecase) ListArticle(ctx context.Context, g *Article, tag string, limit, offset int) (int, []*Article, error) {
+	total, err := a.repo.CountArticle(ctx, g, tag)
+	if err != nil {
+		return 0, nil, errors.InternalServer("query article count", err.Error())
+	}
+
+	if total == 0 {
+		return 0, []*Article{}, nil
+	}
+
+	list, err := a.repo.ListArticle(ctx, g, tag, limit, offset)
+	return total, list, err
 }
 
 func (a *ArticleUsecase) DeleteArticle(ctx context.Context, slug string) (int, error) {

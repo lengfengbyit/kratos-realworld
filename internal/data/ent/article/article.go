@@ -31,17 +31,17 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
-	// EdgeOwner holds the string denoting the owner edge name in mutations.
-	EdgeOwner = "owner"
+	// EdgeAuthor holds the string denoting the author edge name in mutations.
+	EdgeAuthor = "author"
 	// Table holds the table name of the article in the database.
 	Table = "articles"
-	// OwnerTable is the table that holds the owner relation/edge.
-	OwnerTable = "articles"
-	// OwnerInverseTable is the table name for the User entity.
+	// AuthorTable is the table that holds the author relation/edge.
+	AuthorTable = "articles"
+	// AuthorInverseTable is the table name for the User entity.
 	// It exists in this package in order to avoid circular dependency with the "user" package.
-	OwnerInverseTable = "users"
-	// OwnerColumn is the table column denoting the owner relation/edge.
-	OwnerColumn = "user_articles"
+	AuthorInverseTable = "users"
+	// AuthorColumn is the table column denoting the author relation/edge.
+	AuthorColumn = "author_id"
 )
 
 // Columns holds all SQL columns for article fields.
@@ -57,21 +57,10 @@ var Columns = []string{
 	FieldUpdatedAt,
 }
 
-// ForeignKeys holds the SQL foreign-keys that are owned by the "articles"
-// table and are not defined as standalone fields in the schema.
-var ForeignKeys = []string{
-	"user_articles",
-}
-
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
-			return true
-		}
-	}
-	for i := range ForeignKeys {
-		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -141,16 +130,16 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
-// ByOwnerField orders the results by owner field.
-func ByOwnerField(field string, opts ...sql.OrderTermOption) OrderOption {
+// ByAuthorField orders the results by author field.
+func ByAuthorField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newOwnerStep(), sql.OrderByField(field, opts...))
+		sqlgraph.OrderByNeighborTerms(s, newAuthorStep(), sql.OrderByField(field, opts...))
 	}
 }
-func newOwnerStep() *sqlgraph.Step {
+func newAuthorStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
-		sqlgraph.To(OwnerInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2O, true, OwnerTable, OwnerColumn),
+		sqlgraph.To(AuthorInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, AuthorTable, AuthorColumn),
 	)
 }

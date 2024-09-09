@@ -336,15 +336,15 @@ func (c *ArticleClient) GetX(ctx context.Context, id int64) *Article {
 	return obj
 }
 
-// QueryOwner queries the owner edge of a Article.
-func (c *ArticleClient) QueryOwner(a *Article) *UserQuery {
+// QueryAuthor queries the author edge of a Article.
+func (c *ArticleClient) QueryAuthor(a *Article) *UserQuery {
 	query := (&UserClient{config: c.config}).Query()
 	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
 		id := a.ID
 		step := sqlgraph.NewStep(
 			sqlgraph.From(article.Table, article.FieldID, id),
 			sqlgraph.To(user.Table, user.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, true, article.OwnerTable, article.OwnerColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, article.AuthorTable, article.AuthorColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil

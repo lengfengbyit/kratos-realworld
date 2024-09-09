@@ -28,6 +28,14 @@ func (ac *ArticleCreate) SetAuthorID(i int64) *ArticleCreate {
 	return ac
 }
 
+// SetNillableAuthorID sets the "author_id" field if the given value is not nil.
+func (ac *ArticleCreate) SetNillableAuthorID(i *int64) *ArticleCreate {
+	if i != nil {
+		ac.SetAuthorID(*i)
+	}
+	return ac
+}
+
 // SetSlug sets the "slug" field.
 func (ac *ArticleCreate) SetSlug(u uuid.UUID) *ArticleCreate {
 	ac.mutation.SetSlug(u)
@@ -108,23 +116,9 @@ func (ac *ArticleCreate) SetID(i int64) *ArticleCreate {
 	return ac
 }
 
-// SetOwnerID sets the "owner" edge to the User entity by ID.
-func (ac *ArticleCreate) SetOwnerID(id int64) *ArticleCreate {
-	ac.mutation.SetOwnerID(id)
-	return ac
-}
-
-// SetNillableOwnerID sets the "owner" edge to the User entity by ID if the given value is not nil.
-func (ac *ArticleCreate) SetNillableOwnerID(id *int64) *ArticleCreate {
-	if id != nil {
-		ac = ac.SetOwnerID(*id)
-	}
-	return ac
-}
-
-// SetOwner sets the "owner" edge to the User entity.
-func (ac *ArticleCreate) SetOwner(u *User) *ArticleCreate {
-	return ac.SetOwnerID(u.ID)
+// SetAuthor sets the "author" edge to the User entity.
+func (ac *ArticleCreate) SetAuthor(u *User) *ArticleCreate {
+	return ac.SetAuthorID(u.ID)
 }
 
 // Mutation returns the ArticleMutation object of the builder.
@@ -182,9 +176,6 @@ func (ac *ArticleCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (ac *ArticleCreate) check() error {
-	if _, ok := ac.mutation.AuthorID(); !ok {
-		return &ValidationError{Name: "author_id", err: errors.New(`ent: missing required field "Article.author_id"`)}
-	}
 	if _, ok := ac.mutation.Slug(); !ok {
 		return &ValidationError{Name: "slug", err: errors.New(`ent: missing required field "Article.slug"`)}
 	}
@@ -243,10 +234,6 @@ func (ac *ArticleCreate) createSpec() (*Article, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := ac.mutation.AuthorID(); ok {
-		_spec.SetField(article.FieldAuthorID, field.TypeInt64, value)
-		_node.AuthorID = value
-	}
 	if value, ok := ac.mutation.Slug(); ok {
 		_spec.SetField(article.FieldSlug, field.TypeUUID, value)
 		_node.Slug = value
@@ -275,12 +262,12 @@ func (ac *ArticleCreate) createSpec() (*Article, *sqlgraph.CreateSpec) {
 		_spec.SetField(article.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := ac.mutation.OwnerIDs(); len(nodes) > 0 {
+	if nodes := ac.mutation.AuthorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
-			Table:   article.OwnerTable,
-			Columns: []string{article.OwnerColumn},
+			Table:   article.AuthorTable,
+			Columns: []string{article.AuthorColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeInt64),
@@ -289,7 +276,7 @@ func (ac *ArticleCreate) createSpec() (*Article, *sqlgraph.CreateSpec) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
-		_node.user_articles = &nodes[0]
+		_node.AuthorID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
