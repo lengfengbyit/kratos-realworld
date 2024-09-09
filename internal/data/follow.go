@@ -3,7 +3,9 @@ package data
 import (
 	"context"
 	"kratos-realworld/internal/biz"
+	"kratos-realworld/internal/data/ent"
 	"kratos-realworld/internal/data/ent/follow"
+	"kratos-realworld/internal/util"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
@@ -42,4 +44,17 @@ func (f FollowRepo) IsFollowing(ctx context.Context, userId int64, beUserId int6
 		return false
 	}
 	return exist
+}
+
+// GetFollowUserIds 获取用户的关注用户id
+func (f FollowRepo) GetFollowUserIds(ctx context.Context, userId int64) ([]int64, error) {
+	lst, err := f.data.db.Follow.Query().Where(follow.UserID(userId)).Select(follow.FieldBeUserID).All(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	beUserIds := util.SliceMap(lst, func(item *ent.Follow, index int) int64 {
+		return item.BeUserID
+	})
+	return beUserIds, nil
 }

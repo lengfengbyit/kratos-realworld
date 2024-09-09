@@ -17,4 +17,5 @@ type FollowRepo interface {
 	IsFollowing(ctx context.Context, userId int64, beUserId int64) bool
 	Follow(ctx context.Context, userId int64, beUserId int64) bool
 	Unfollow(ctx context.Context, userId int64, beUserId int64) bool
+	GetFollowUserIds(ctx context.Context, userId int64) ([]int64, error)
 }

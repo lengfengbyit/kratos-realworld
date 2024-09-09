@@ -38,6 +38,16 @@ type Author struct {
 	Followed bool
 }
 
+type ListArticleRequest struct {
+	AuthorId int64
+	Tag      string
+	Title    string
+	UserIds  []int64
+
+	Limit  int
+	Offset int
+}
+
 // Tags 使用 copier 从 ent.Article 转换时使用
 // 从 string 类型的 Tags 转换为 Article.TagList
 func (a *Article) Tags(tags string) {
@@ -59,9 +69,9 @@ type ArticleRepo interface {
 	CreateArticle(ctx context.Context, g *Article) (*Article, error)
 	UpdateArticle(ctx context.Context, g *Article) (int, error)
 	GetArticle(ctx context.Context, slug uuid.UUID) (*Article, error)
-	ListArticle(ctx context.Context, g *Article, tag string, limit, offset int) ([]*Article, error)
+	ListArticle(ctx context.Context, g *ListArticleRequest) ([]*Article, error)
 	DeleteArticle(ctx context.Context, slug uuid.UUID) (int, error)
-	CountArticle(ctx context.Context, g *Article, tag string) (int, error)
+	CountArticle(ctx context.Context, g *ListArticleRequest) (int, error)
 }
 
 // ArticleUsecase 业务层的操作
@@ -91,8 +101,8 @@ func (a *ArticleUsecase) GetArticle(ctx context.Context, slug string) (*Article,
 	return a.repo.GetArticle(ctx, slugUUID)
 }
 
-func (a *ArticleUsecase) ListArticle(ctx context.Context, g *Article, tag string, limit, offset int) (int, []*Article, error) {
-	total, err := a.repo.CountArticle(ctx, g, tag)
+func (a *ArticleUsecase) ListArticle(ctx context.Context, g *ListArticleRequest) (int, []*Article, error) {
+	total, err := a.repo.CountArticle(ctx, g)
 	if err != nil {
 		return 0, nil, errors.InternalServer("query article count", err.Error())
 	}
@@ -101,7 +111,7 @@ func (a *ArticleUsecase) ListArticle(ctx context.Context, g *Article, tag string
 		return 0, []*Article{}, nil
 	}
 
-	list, err := a.repo.ListArticle(ctx, g, tag, limit, offset)
+	list, err := a.repo.ListArticle(ctx, g)
 	return total, list, err
 }
 

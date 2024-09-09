@@ -1,0 +1,17 @@
+
+### create article
+POST {{host}}/api/articles
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "article": {
+    "title": "How to train your dragon3",
+    "description": "Ever wonder how2?",
+    "body": "Very carefully.",
+    "tagList": [
+      "training",
+      "dragons"
+    ]
+  }
+}

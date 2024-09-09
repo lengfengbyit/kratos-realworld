@@ -29,11 +29,15 @@ func NewArticleService(biz *biz.ArticleUsecase, profileBiz *biz.ProfileUsecase, 
 }
 
 func (s *ArticleService) ListArticle(ctx context.Context, req *pb.ListArticleRequest) (*pb.ListArticleReply, error) {
+	return s.listArticle(ctx, req, nil)
+}
+
+func (s *ArticleService) listArticle(ctx context.Context, req *pb.ListArticleRequest, beUserIds []int64) (*pb.ListArticleReply, error) {
 	if req.Limit == 0 {
 		req.Limit = 10
 	}
 
-	var artParams biz.Article
+	var artParams biz.ListArticleRequest
 	if err := copier.Copy(&artParams, req); err != nil {
 		return nil, err
 	}
@@ -46,7 +50,11 @@ func (s *ArticleService) ListArticle(ctx context.Context, req *pb.ListArticleReq
 		artParams.AuthorId = profile.ID
 	}
 
-	total, articles, err := s.biz.ListArticle(ctx, &artParams, req.Tag, int(req.Limit), int(req.Offset))
+	if beUserIds != nil {
+		artParams.UserIds = beUserIds
+	}
+
+	total, articles, err := s.biz.ListArticle(ctx, &artParams)
 	if err != nil {
 		return nil, err
 	}
@@ -109,12 +117,21 @@ func (s *ArticleService) CreateArticle(ctx context.Context, req *pb.CreateArticl
 	return s.appendAuthor(ctx, article.AuthorId, &articleReply)
 }
 func (s *ArticleService) UpdateArticle(ctx context.Context, req *pb.SaveArticleRequest) (*pb.ArticleReply, error) {
-	var articleParams biz.Article
-	if err := copier.Copy(&articleParams, req.Article); err != nil {
+	article, err := s.GetArticle(ctx, &pb.SlugRequest{Slug: req.Slug})
+	if err != nil {
 		return nil, err
 	}
-	_, err := s.biz.UpdateArticle(ctx, &articleParams)
+
+	var articleParams biz.Article
+	if err = copier.Copy(&articleParams, req.Article); err != nil {
+		return nil, err
+	}
+	_, err = s.biz.UpdateArticle(ctx, &articleParams)
 	if err != nil {
+		return nil, err
+	}
+
+	if err = copier.Copy(article, req.Article); err != nil {
 		return nil, err
 	}
 
@@ -124,8 +141,24 @@ func (s *ArticleService) DeleteArticle(ctx context.Context, req *pb.SlugRequest)
 	_, _ = s.biz.DeleteArticle(ctx, req.Slug)
 	return &pb.EmptyReply{}, nil
 }
+
+// FeedArticle 获取关注用户的文章列表
 func (s *ArticleService) FeedArticle(ctx context.Context, req *pb.ListArticleRequest) (*pb.ListArticleReply, error) {
-	return &pb.ListArticleReply{}, nil
+	// 获取当前用户 id
+	userId, err := auth.GetUserId(ctx)
+	if err != nil {
+		return nil, errors.Join(err, errors.New("invalid token"))
+	}
+
+	// 获取关注用户Ids
+	followUserIds, err := s.profileBiz.GetFollowUserIds(ctx, userId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取文章列表
+	return s.listArticle(ctx, req, followUserIds)
 }
 
 func (s *ArticleService) GetAuthor(ctx context.Context, userId int64) (*pb.Author, error) {

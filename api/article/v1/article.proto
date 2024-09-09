@@ -8,6 +8,13 @@ import "validate/validate.proto";
 option go_package = "kratos-realworld/api/article/v1;v1";
 
 service Article {
+  // 返回关注用户的多篇文章，需要身份验证
+  rpc FeedArticle(ListArticleRequest) returns (ListArticleReply) {
+    option (google.api.http) = {
+      get: "/api/articles/feed"
+    };
+  };
+
   // 获取多篇文章，需要身份验证
   rpc ListArticle (ListArticleRequest) returns (ListArticleReply){
     option (google.api.http) = {
@@ -45,12 +52,7 @@ service Article {
     };
   };
 
-  // 返回关注用户的多篇文章，需要身份验证
-  rpc FeedArticle(ListArticleRequest) returns (ListArticleReply) {
-    option (google.api.http) = {
-      get: "/api/articles/feed"
-    };
-  };
+
 }
 
 message SlugRequest {

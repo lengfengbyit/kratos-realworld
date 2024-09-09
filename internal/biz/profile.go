@@ -103,7 +103,10 @@ func (biz *ProfileUsecase) UnFollow(ctx context.Context, username string) (*Prof
 		Username:  beUser.Username,
 		Following: following,
 	}, nil
+}
 
+func (biz *ProfileUsecase) GetFollowUserIds(ctx context.Context, userId int64) ([]int64, error) {
+	return biz.followRepo.GetFollowUserIds(ctx, userId)
 }
 
 func (biz *ProfileUsecase) getUsers(ctx context.Context, username string) (userId int64, beUser *User, err error) {

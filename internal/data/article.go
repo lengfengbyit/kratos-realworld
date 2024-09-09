@@ -62,6 +62,9 @@ func (repo *articleRepo) UpdateArticle(ctx context.Context, g *biz.Article) (int
 
 func (repo *articleRepo) GetArticle(ctx context.Context, slug uuid.UUID) (*biz.Article, error) {
 	info, err := repo.data.db.Article.Query().WithAuthor().Where(article.SlugEQ(slug)).First(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	var art biz.Article
 	if err = copier.Copy(&art, info); err != nil {
@@ -70,11 +73,11 @@ func (repo *articleRepo) GetArticle(ctx context.Context, slug uuid.UUID) (*biz.A
 	return &art, err
 }
 
-func (repo *articleRepo) ListArticle(ctx context.Context, g *biz.Article, tag string, limit, offset int) ([]*biz.Article, error) {
-	query := repo.buildQuery(tag, g)
+func (repo *articleRepo) ListArticle(ctx context.Context, g *biz.ListArticleRequest) ([]*biz.Article, error) {
+	query := repo.buildQuery(g)
 
 	list, err := query.WithAuthor().
-		Limit(limit).Offset(offset).
+		Limit(g.Limit).Offset(g.Offset).
 		Order(ent.Desc(article.FieldID)).
 		All(ctx)
 
@@ -86,8 +89,8 @@ func (repo *articleRepo) ListArticle(ctx context.Context, g *biz.Article, tag st
 	return lstArticle, err
 }
 
-func (repo *articleRepo) CountArticle(ctx context.Context, g *biz.Article, tag string) (int, error) {
-	query := repo.buildQuery(tag, g)
+func (repo *articleRepo) CountArticle(ctx context.Context, g *biz.ListArticleRequest) (int, error) {
+	query := repo.buildQuery(g)
 	return query.Count(ctx)
 }
 
@@ -95,7 +98,7 @@ func (repo *articleRepo) DeleteArticle(ctx context.Context, slug uuid.UUID) (int
 	return repo.data.db.Article.Delete().Where(article.SlugEQ(slug)).Exec(ctx)
 }
 
-func (repo *articleRepo) buildQuery(tag string, g *biz.Article) *ent.ArticleQuery {
+func (repo *articleRepo) buildQuery(g *biz.ListArticleRequest) *ent.ArticleQuery {
 	query := repo.data.db.Article.Query()
 
 	if g.Title != "" {
@@ -106,8 +109,13 @@ func (repo *articleRepo) buildQuery(tag string, g *biz.Article) *ent.ArticleQuer
 		query.Where(article.AuthorIDEQ(g.AuthorId))
 	}
 
-	if tag != "" {
-		query.Where(article.TagsContains(tag))
+	if g.Tag != "" {
+		query.Where(article.TagsContains(g.Tag))
 	}
+
+	if g.UserIds != nil {
+		query.Where(article.AuthorIDIn(g.UserIds...))
+	}
+
 	return query
 }

@@ -19,18 +19,20 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	Article_FeedArticle_FullMethodName   = "/api.article.v1.Article/FeedArticle"
 	Article_ListArticle_FullMethodName   = "/api.article.v1.Article/ListArticle"
 	Article_GetArticle_FullMethodName    = "/api.article.v1.Article/GetArticle"
 	Article_CreateArticle_FullMethodName = "/api.article.v1.Article/CreateArticle"
 	Article_UpdateArticle_FullMethodName = "/api.article.v1.Article/UpdateArticle"
 	Article_DeleteArticle_FullMethodName = "/api.article.v1.Article/DeleteArticle"
-	Article_FeedArticle_FullMethodName   = "/api.article.v1.Article/FeedArticle"
 )
 
 // ArticleClient is the client API for Article service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ArticleClient interface {
+	// 返回关注用户的多篇文章，需要身份验证
+	FeedArticle(ctx context.Context, in *ListArticleRequest, opts ...grpc.CallOption) (*ListArticleReply, error)
 	// 获取多篇文章，需要身份验证
 	ListArticle(ctx context.Context, in *ListArticleRequest, opts ...grpc.CallOption) (*ListArticleReply, error)
 	// 获取单篇文章，无需身份验证
@@ -41,8 +43,6 @@ type ArticleClient interface {
 	UpdateArticle(ctx context.Context, in *SaveArticleRequest, opts ...grpc.CallOption) (*ArticleReply, error)
 	// 删除文章，需要身份验证
 	DeleteArticle(ctx context.Context, in *SlugRequest, opts ...grpc.CallOption) (*EmptyReply, error)
-	// 返回关注用户的多篇文章，需要身份验证
-	FeedArticle(ctx context.Context, in *ListArticleRequest, opts ...grpc.CallOption) (*ListArticleReply, error)
 }
 
 type articleClient struct {
@@ -51,6 +51,16 @@ type articleClient struct {
 
 func NewArticleClient(cc grpc.ClientConnInterface) ArticleClient {
 	return &articleClient{cc}
+}
+
+func (c *articleClient) FeedArticle(ctx context.Context, in *ListArticleRequest, opts ...grpc.CallOption) (*ListArticleReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListArticleReply)
+	err := c.cc.Invoke(ctx, Article_FeedArticle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *articleClient) ListArticle(ctx context.Context, in *ListArticleRequest, opts ...grpc.CallOption) (*ListArticleReply, error) {
@@ -103,20 +113,12 @@ func (c *articleClient) DeleteArticle(ctx context.Context, in *SlugRequest, opts
 	return out, nil
 }
 
-func (c *articleClient) FeedArticle(ctx context.Context, in *ListArticleRequest, opts ...grpc.CallOption) (*ListArticleReply, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(ListArticleReply)
-	err := c.cc.Invoke(ctx, Article_FeedArticle_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // ArticleServer is the server API for Article service.
 // All implementations must embed UnimplementedArticleServer
 // for forward compatibility.
 type ArticleServer interface {
+	// 返回关注用户的多篇文章，需要身份验证
+	FeedArticle(context.Context, *ListArticleRequest) (*ListArticleReply, error)
 	// 获取多篇文章，需要身份验证
 	ListArticle(context.Context, *ListArticleRequest) (*ListArticleReply, error)
 	// 获取单篇文章，无需身份验证
@@ -127,8 +129,6 @@ type ArticleServer interface {
 	UpdateArticle(context.Context, *SaveArticleRequest) (*ArticleReply, error)
 	// 删除文章，需要身份验证
 	DeleteArticle(context.Context, *SlugRequest) (*EmptyReply, error)
-	// 返回关注用户的多篇文章，需要身份验证
-	FeedArticle(context.Context, *ListArticleRequest) (*ListArticleReply, error)
 	mustEmbedUnimplementedArticleServer()
 }
 
@@ -139,6 +139,9 @@ type ArticleServer interface {
 // pointer dereference when methods are called.
 type UnimplementedArticleServer struct{}
 
+func (UnimplementedArticleServer) FeedArticle(context.Context, *ListArticleRequest) (*ListArticleReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FeedArticle not implemented")
+}
 func (UnimplementedArticleServer) ListArticle(context.Context, *ListArticleRequest) (*ListArticleReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListArticle not implemented")
 }
@@ -153,9 +156,6 @@ func (UnimplementedArticleServer) UpdateArticle(context.Context, *SaveArticleReq
 }
 func (UnimplementedArticleServer) DeleteArticle(context.Context, *SlugRequest) (*EmptyReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteArticle not implemented")
-}
-func (UnimplementedArticleServer) FeedArticle(context.Context, *ListArticleRequest) (*ListArticleReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FeedArticle not implemented")
 }
 func (UnimplementedArticleServer) mustEmbedUnimplementedArticleServer() {}
 func (UnimplementedArticleServer) testEmbeddedByValue()                 {}
@@ -176,6 +176,24 @@ func RegisterArticleServer(s grpc.ServiceRegistrar, srv ArticleServer) {
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&Article_ServiceDesc, srv)
+}
+
+func _Article_FeedArticle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListArticleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArticleServer).FeedArticle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Article_FeedArticle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArticleServer).FeedArticle(ctx, req.(*ListArticleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Article_ListArticle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -268,24 +286,6 @@ func _Article_DeleteArticle_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Article_FeedArticle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListArticleRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ArticleServer).FeedArticle(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Article_FeedArticle_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ArticleServer).FeedArticle(ctx, req.(*ListArticleRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Article_ServiceDesc is the grpc.ServiceDesc for Article service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -293,6 +293,10 @@ var Article_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "api.article.v1.Article",
 	HandlerType: (*ArticleServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "FeedArticle",
+			Handler:    _Article_FeedArticle_Handler,
+		},
 		{
 			MethodName: "ListArticle",
 			Handler:    _Article_ListArticle_Handler,
@@ -312,10 +316,6 @@ var Article_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteArticle",
 			Handler:    _Article_DeleteArticle_Handler,
-		},
-		{
-			MethodName: "FeedArticle",
-			Handler:    _Article_FeedArticle_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

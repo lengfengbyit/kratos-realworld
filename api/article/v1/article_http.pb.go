@@ -43,12 +43,31 @@ type ArticleHTTPServer interface {
 
 func RegisterArticleHTTPServer(s *http.Server, srv ArticleHTTPServer) {
 	r := s.Route("/")
+	r.GET("/api/articles/feed", _Article_FeedArticle0_HTTP_Handler(srv))
 	r.GET("/api/articles", _Article_ListArticle0_HTTP_Handler(srv))
 	r.GET("/api/articles/{slug}", _Article_GetArticle0_HTTP_Handler(srv))
 	r.POST("/api/articles", _Article_CreateArticle0_HTTP_Handler(srv))
 	r.PUT("/api/articles/{slug}", _Article_UpdateArticle0_HTTP_Handler(srv))
 	r.DELETE("/api/articles/{slug}", _Article_DeleteArticle0_HTTP_Handler(srv))
-	r.GET("/api/articles/feed", _Article_FeedArticle0_HTTP_Handler(srv))
+}
+
+func _Article_FeedArticle0_HTTP_Handler(srv ArticleHTTPServer) func(ctx http.Context) error {
+	return func(ctx http.Context) error {
+		var in ListArticleRequest
+		if err := ctx.BindQuery(&in); err != nil {
+			return err
+		}
+		http.SetOperation(ctx, OperationArticleFeedArticle)
+		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
+			return srv.FeedArticle(ctx, req.(*ListArticleRequest))
+		})
+		out, err := h(ctx, &in)
+		if err != nil {
+			return err
+		}
+		reply := out.(*ListArticleReply)
+		return ctx.Result(200, reply)
+	}
 }
 
 func _Article_ListArticle0_HTTP_Handler(srv ArticleHTTPServer) func(ctx http.Context) error {
@@ -157,25 +176,6 @@ func _Article_DeleteArticle0_HTTP_Handler(srv ArticleHTTPServer) func(ctx http.C
 			return err
 		}
 		reply := out.(*EmptyReply)
-		return ctx.Result(200, reply)
-	}
-}
-
-func _Article_FeedArticle0_HTTP_Handler(srv ArticleHTTPServer) func(ctx http.Context) error {
-	return func(ctx http.Context) error {
-		var in ListArticleRequest
-		if err := ctx.BindQuery(&in); err != nil {
-			return err
-		}
-		http.SetOperation(ctx, OperationArticleFeedArticle)
-		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
-			return srv.FeedArticle(ctx, req.(*ListArticleRequest))
-		})
-		out, err := h(ctx, &in)
-		if err != nil {
-			return err
-		}
-		reply := out.(*ListArticleReply)
 		return ctx.Result(200, reply)
 	}
 }

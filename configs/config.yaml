@@ -11,7 +11,7 @@ server:
       expires: "12h"
 data:
   database:
-    debug: false # 为 true 打印 sql 日志
+    debug: true # 为 true 打印 sql 日志
     driver: mysql
     source: root:123456@tcp(127.0.0.1:3306)/kratos-realworld?parseTime=True&loc=Local
   redis:
