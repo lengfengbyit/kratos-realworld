@@ -36,3 +36,7 @@ bin/
 .vscode/
 .idea/
 *.swp
+
+# ent
+internal/data/ent/*
+!internal/data/ent/schema
