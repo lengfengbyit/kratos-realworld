@@ -41,3 +41,6 @@ bin/
 internal/data/ent/*
 !internal/data/ent/schema
 !internal/data/ent/generate.go
+
+#api
+api/**/*.go

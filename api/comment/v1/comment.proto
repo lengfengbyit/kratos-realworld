@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package api.comment.v1;
+
+import "google/api/annotations.proto";
+import "validate/validate.proto";
+
+option go_package = "kratos-realworld/api/comment/v1;v1";
+
+service Comment {
+  rpc CreateComment (CreateCommentRequest) returns (CommentReply) {
+    option (google.api.http) = {
+      post: "/api/articles/{slug}/comments"
+      body: "*"
+    };
+  };
+
+  rpc ListComment (ListCommentRequest) returns (ListCommentReply) {
+    option (google.api.http) = {
+      get: "/api/articles/{slug}/comments"
+    };
+  };
+
+  rpc DeleteComment (DeleteCommentRequest) returns (DeleteCommentReply) {
+    option (google.api.http) = {
+      delete: "/api/articles/{slug}/comments/{id}"
+    };
+  };
+}
+
+message CreateCommentRequest {
+  message Comment {
+    string body = 1 [(validate.rules).string.min_len = 1];
+  }
+  Comment comment = 1 [(validate.rules).message.required = true];
+  string slug = 2 [(validate.rules).string.min_len = 1];
+}
+
+message DeleteCommentRequest {
+  string slug = 1 [(validate.rules).string.min_len = 1];
+  uint32 id = 2 [(validate.rules).uint32.gt = 0];
+}
+message DeleteCommentReply {}
+
+message ListCommentRequest {
+  string slug = 1 [(validate.rules).string.min_len = 1];
+}
+
+message CommentReply {
+  message Author {
+    string username = 1;
+    string bio = 2;
+    string image = 3;
+    bool following = 4;
+  }
+
+  message Comment {
+    string id = 1;
+    string createdAt = 2;
+    string updatedAt = 3;
+    string body = 4;
+    Author author = 5;
+  }
+}
+
+message ListCommentReply {
+  repeated CommentReply comments = 1;
+}

@@ -157,6 +157,71 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.article.v1.EmptyReply'
+    /api/articles/{slug}/comments:
+        get:
+            tags:
+                - Comment
+            operationId: Comment_ListComment
+            parameters:
+                - name: slug
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.comment.v1.ListCommentReply'
+        post:
+            tags:
+                - Comment
+            operationId: Comment_CreateComment
+            parameters:
+                - name: slug
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.comment.v1.CreateCommentRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.comment.v1.CommentReply'
+    /api/articles/{slug}/comments/{id}:
+        delete:
+            tags:
+                - Comment
+            operationId: Comment_DeleteComment
+            parameters:
+                - name: slug
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.comment.v1.DeleteCommentReply'
     /api/articles/{slug}/favorite:
         post:
             tags:
@@ -434,6 +499,31 @@ components:
             properties:
                 slug:
                     type: string
+        api.comment.v1.CommentReply:
+            type: object
+            properties: {}
+        api.comment.v1.CreateCommentRequest:
+            type: object
+            properties:
+                comment:
+                    $ref: '#/components/schemas/api.comment.v1.CreateCommentRequest_Comment'
+                slug:
+                    type: string
+        api.comment.v1.CreateCommentRequest_Comment:
+            type: object
+            properties:
+                body:
+                    type: string
+        api.comment.v1.DeleteCommentReply:
+            type: object
+            properties: {}
+        api.comment.v1.ListCommentReply:
+            type: object
+            properties:
+                comments:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.comment.v1.CommentReply'
         helloworld.v1.HelloReply:
             type: object
             properties:
@@ -523,6 +613,7 @@ components:
                     $ref: '#/components/schemas/user.v1.User'
 tags:
     - name: Article
+    - name: Comment
     - name: Greeter
       description: The greeting service definition.
     - name: Profile
