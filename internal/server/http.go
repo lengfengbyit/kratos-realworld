@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	article "kratos-realworld/api/article/v1"
+	comment "kratos-realworld/api/comment/v1"
 	v1 "kratos-realworld/api/helloworld/v1"
 	profile "kratos-realworld/api/profile/v1"
 	user "kratos-realworld/api/user/v1"
@@ -23,8 +24,10 @@ import (
 
 func MatchRouter() selector.MatchFunc {
 	skipRouters := map[string]struct{}{
-		"/user.v1.UserApi/Login":    {},
-		"/user.v1.UserApi/Register": {},
+		"/user.v1.UserApi/Login":              {},
+		"/user.v1.UserApi/Register":           {},
+		"/api.article.v1.Article/ListArticle": {},
+		"/api.comment.v1.Comment/ListComment": {},
 	}
 	return func(ctx context.Context, operation string) bool {
 		if _, ok := skipRouters[operation]; ok {
@@ -39,6 +42,7 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService,
 	userApi *service.UserApiService,
 	profileApi *service.ProfileService,
 	articleApi *service.ArticleService,
+	commentApi *service.CommentService,
 	logger log.Logger) *http.Server {
 	var opts = []http.ServerOption{
 
@@ -76,5 +80,6 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService,
 	user.RegisterUserApiHTTPServer(srv, userApi)
 	profile.RegisterProfileHTTPServer(srv, profileApi)
 	article.RegisterArticleHTTPServer(srv, articleApi)
+	comment.RegisterCommentHTTPServer(srv, commentApi)
 	return srv
 }

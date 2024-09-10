@@ -168,6 +168,16 @@ paths:
                   required: true
                   schema:
                     type: string
+                - name: offset
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
             responses:
                 "200":
                     description: OK
@@ -213,8 +223,7 @@ paths:
                   in: path
                   required: true
                   schema:
-                    type: integer
-                    format: uint32
+                    type: string
             responses:
                 "200":
                     description: OK
@@ -499,9 +508,33 @@ components:
             properties:
                 slug:
                     type: string
+        api.comment.v1.Author:
+            type: object
+            properties:
+                username:
+                    type: string
+                bio:
+                    type: string
+                image:
+                    type: string
+                following:
+                    type: boolean
+        api.comment.v1.CommentInfoReply:
+            type: object
+            properties:
+                id:
+                    type: string
+                createdAt:
+                    type: string
+                body:
+                    type: string
+                author:
+                    $ref: '#/components/schemas/api.comment.v1.Author'
         api.comment.v1.CommentReply:
             type: object
-            properties: {}
+            properties:
+                comment:
+                    $ref: '#/components/schemas/api.comment.v1.CommentInfoReply'
         api.comment.v1.CreateCommentRequest:
             type: object
             properties:
@@ -523,7 +556,7 @@ components:
                 comments:
                     type: array
                     items:
-                        $ref: '#/components/schemas/api.comment.v1.CommentReply'
+                        $ref: '#/components/schemas/api.comment.v1.CommentInfoReply'
         helloworld.v1.HelloReply:
             type: object
             properties:
