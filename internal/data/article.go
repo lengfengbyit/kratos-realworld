@@ -63,6 +63,7 @@ func (repo *articleRepo) UpdateArticle(ctx context.Context, g *biz.Article) (int
 func (repo *articleRepo) GetArticle(ctx context.Context, slug uuid.UUID) (*biz.Article, error) {
 	info, err := repo.data.db.Article.Query().WithAuthor().Where(article.SlugEQ(slug)).First(ctx)
 	if err != nil {
+		repo.log.Errorf("get article error: %v", err)
 		return nil, err
 	}
 

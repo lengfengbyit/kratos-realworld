@@ -15,16 +15,18 @@ import (
 type ArticleService struct {
 	pb.UnimplementedArticleServer
 
-	biz        *biz.ArticleUsecase
-	profileBiz *biz.ProfileUsecase
-	log        *log.Helper
+	biz         *biz.ArticleUsecase
+	profileBiz  *biz.ProfileUsecase
+	favoriteBiz *biz.FavoriteUsecase
+	log         *log.Helper
 }
 
-func NewArticleService(biz *biz.ArticleUsecase, profileBiz *biz.ProfileUsecase, logger log.Logger) *ArticleService {
+func NewArticleService(biz *biz.ArticleUsecase, profileBiz *biz.ProfileUsecase, favoriteBiz *biz.FavoriteUsecase, logger log.Logger) *ArticleService {
 	return &ArticleService{
-		biz:        biz,
-		profileBiz: profileBiz,
-		log:        log.NewHelper(logger),
+		biz:         biz,
+		profileBiz:  profileBiz,
+		favoriteBiz: favoriteBiz,
+		log:         log.NewHelper(logger),
 	}
 }
 
@@ -48,6 +50,14 @@ func (s *ArticleService) listArticle(ctx context.Context, req *pb.ListArticleReq
 			return nil, err
 		}
 		artParams.AuthorId = profile.ID
+	}
+
+	if req.Favorited != "" {
+		profile, err := s.profileBiz.FindByUsername(ctx, req.Favorited)
+		if err != nil {
+			return nil, err
+		}
+		artParams.UserIds = []int64{profile.ID}
 	}
 
 	if beUserIds != nil {
@@ -84,6 +94,17 @@ func (s *ArticleService) GetArticle(ctx context.Context, req *pb.SlugRequest) (*
 	// 日期格式化
 	articleReply.CreatedAt = article.CreatedAt.Format(time.DateTime)
 	articleReply.UpdatedAt = article.UpdatedAt.Format(time.DateTime)
+
+	// 检查当前用户是否点赞
+	userId, err := auth.GetUserId(ctx)
+	if err == nil {
+		if s.favoriteBiz.Favorite(ctx, userId, article.Id) {
+			articleReply.Favorited = true
+		}
+	}
+
+	// 获取文章的点赞数
+	articleReply.FavoritesCount = s.favoriteBiz.FavoriteCount(ctx, article.Id)
 
 	return &articleReply, nil
 }
@@ -161,6 +182,36 @@ func (s *ArticleService) FeedArticle(ctx context.Context, req *pb.ListArticleReq
 	return s.listArticle(ctx, req, followUserIds)
 }
 
+// FavoriteArticle 点赞文章
+func (s *ArticleService) FavoriteArticle(ctx context.Context, req *pb.SlugRequest) (*pb.ArticleReply, error) {
+	userId, articleId, err := s.getUserIdAndArticleId(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// 保存点赞关系
+	if s.favoriteBiz.Favorite(ctx, userId, articleId) {
+		return s.GetArticle(ctx, req)
+	}
+
+	return nil, errors.New("failed to favorite article")
+}
+
+// UnFavoriteArticle 取消点赞文章
+func (s *ArticleService) UnFavoriteArticle(ctx context.Context, req *pb.SlugRequest) (*pb.ArticleReply, error) {
+	userId, articleId, err := s.getUserIdAndArticleId(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// 保存点赞关系
+	if s.favoriteBiz.UnFavorite(ctx, userId, articleId) {
+		return s.GetArticle(ctx, req)
+	}
+
+	return nil, errors.New("failed to unFavorite article")
+}
+
 func (s *ArticleService) GetAuthor(ctx context.Context, userId int64) (*pb.Author, error) {
 	user, err := s.profileBiz.FindByUserId(ctx, userId)
 	if err != nil {
@@ -172,6 +223,21 @@ func (s *ArticleService) GetAuthor(ctx context.Context, userId int64) (*pb.Autho
 		Image:     user.Image,
 		Following: user.Following,
 	}, nil
+}
+
+func (s *ArticleService) getUserIdAndArticleId(ctx context.Context, req *pb.SlugRequest) (int64, int64, error) {
+	// 获取用户 ID
+	userId, err := auth.GetUserId(ctx)
+	if err != nil {
+		return 0, 0, errors.Join(err, errors.New("invalid token"))
+	}
+
+	// 获取文章 ID
+	article, err := s.biz.GetArticle(ctx, req.Slug)
+	if err != nil {
+		return 0, 0, err
+	}
+	return userId, article.Id, nil
 }
 
 func (s *ArticleService) appendAuthor(ctx context.Context, authorId int64, articleReply *pb.ArticleReply) (*pb.ArticleReply, error) {

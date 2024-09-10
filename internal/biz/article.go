@@ -18,6 +18,7 @@ var (
 
 // Article VO
 type Article struct {
+	Id             int64
 	AuthorId       int64
 	Slug           string
 	Title          string

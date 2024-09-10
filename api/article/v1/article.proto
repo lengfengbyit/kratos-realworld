@@ -52,6 +52,18 @@ service Article {
     };
   };
 
+  rpc FavoriteArticle (SlugRequest) returns (ArticleReply){
+    option (google.api.http) = {
+      post: "/api/articles/{slug}/favorite"
+      body: "*"
+    };
+  };
+
+  rpc UnFavoriteArticle (SlugRequest) returns (ArticleReply){
+    option (google.api.http) = {
+      delete: "/api/articles/{slug}/favorite"
+    };
+  };
 
 }
 
@@ -87,7 +99,7 @@ message SaveArticleRequest {
 message ListArticleRequest {
   string tag = 1;
   string author = 2;
-  bool favorited = 3;
+  string favorited = 3;
   uint32 limit = 4 [(validate.rules).uint32 = {ignore_empty:true, gt:0, lt:100}];
   uint32 offset = 5 [(validate.rules).uint32 = {ignore_empty:true, gte:0}];
 }

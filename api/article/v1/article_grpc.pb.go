@@ -19,12 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Article_FeedArticle_FullMethodName   = "/api.article.v1.Article/FeedArticle"
-	Article_ListArticle_FullMethodName   = "/api.article.v1.Article/ListArticle"
-	Article_GetArticle_FullMethodName    = "/api.article.v1.Article/GetArticle"
-	Article_CreateArticle_FullMethodName = "/api.article.v1.Article/CreateArticle"
-	Article_UpdateArticle_FullMethodName = "/api.article.v1.Article/UpdateArticle"
-	Article_DeleteArticle_FullMethodName = "/api.article.v1.Article/DeleteArticle"
+	Article_FeedArticle_FullMethodName       = "/api.article.v1.Article/FeedArticle"
+	Article_ListArticle_FullMethodName       = "/api.article.v1.Article/ListArticle"
+	Article_GetArticle_FullMethodName        = "/api.article.v1.Article/GetArticle"
+	Article_CreateArticle_FullMethodName     = "/api.article.v1.Article/CreateArticle"
+	Article_UpdateArticle_FullMethodName     = "/api.article.v1.Article/UpdateArticle"
+	Article_DeleteArticle_FullMethodName     = "/api.article.v1.Article/DeleteArticle"
+	Article_FavoriteArticle_FullMethodName   = "/api.article.v1.Article/FavoriteArticle"
+	Article_UnFavoriteArticle_FullMethodName = "/api.article.v1.Article/UnFavoriteArticle"
 )
 
 // ArticleClient is the client API for Article service.
@@ -43,6 +45,8 @@ type ArticleClient interface {
 	UpdateArticle(ctx context.Context, in *SaveArticleRequest, opts ...grpc.CallOption) (*ArticleReply, error)
 	// 删除文章，需要身份验证
 	DeleteArticle(ctx context.Context, in *SlugRequest, opts ...grpc.CallOption) (*EmptyReply, error)
+	FavoriteArticle(ctx context.Context, in *SlugRequest, opts ...grpc.CallOption) (*ArticleReply, error)
+	UnFavoriteArticle(ctx context.Context, in *SlugRequest, opts ...grpc.CallOption) (*ArticleReply, error)
 }
 
 type articleClient struct {
@@ -113,6 +117,26 @@ func (c *articleClient) DeleteArticle(ctx context.Context, in *SlugRequest, opts
 	return out, nil
 }
 
+func (c *articleClient) FavoriteArticle(ctx context.Context, in *SlugRequest, opts ...grpc.CallOption) (*ArticleReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ArticleReply)
+	err := c.cc.Invoke(ctx, Article_FavoriteArticle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *articleClient) UnFavoriteArticle(ctx context.Context, in *SlugRequest, opts ...grpc.CallOption) (*ArticleReply, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ArticleReply)
+	err := c.cc.Invoke(ctx, Article_UnFavoriteArticle_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ArticleServer is the server API for Article service.
 // All implementations must embed UnimplementedArticleServer
 // for forward compatibility.
@@ -129,6 +153,8 @@ type ArticleServer interface {
 	UpdateArticle(context.Context, *SaveArticleRequest) (*ArticleReply, error)
 	// 删除文章，需要身份验证
 	DeleteArticle(context.Context, *SlugRequest) (*EmptyReply, error)
+	FavoriteArticle(context.Context, *SlugRequest) (*ArticleReply, error)
+	UnFavoriteArticle(context.Context, *SlugRequest) (*ArticleReply, error)
 	mustEmbedUnimplementedArticleServer()
 }
 
@@ -156,6 +182,12 @@ func (UnimplementedArticleServer) UpdateArticle(context.Context, *SaveArticleReq
 }
 func (UnimplementedArticleServer) DeleteArticle(context.Context, *SlugRequest) (*EmptyReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteArticle not implemented")
+}
+func (UnimplementedArticleServer) FavoriteArticle(context.Context, *SlugRequest) (*ArticleReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FavoriteArticle not implemented")
+}
+func (UnimplementedArticleServer) UnFavoriteArticle(context.Context, *SlugRequest) (*ArticleReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnFavoriteArticle not implemented")
 }
 func (UnimplementedArticleServer) mustEmbedUnimplementedArticleServer() {}
 func (UnimplementedArticleServer) testEmbeddedByValue()                 {}
@@ -286,6 +318,42 @@ func _Article_DeleteArticle_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Article_FavoriteArticle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SlugRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArticleServer).FavoriteArticle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Article_FavoriteArticle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArticleServer).FavoriteArticle(ctx, req.(*SlugRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Article_UnFavoriteArticle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SlugRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArticleServer).UnFavoriteArticle(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Article_UnFavoriteArticle_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArticleServer).UnFavoriteArticle(ctx, req.(*SlugRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Article_ServiceDesc is the grpc.ServiceDesc for Article service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -316,6 +384,14 @@ var Article_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteArticle",
 			Handler:    _Article_DeleteArticle_Handler,
+		},
+		{
+			MethodName: "FavoriteArticle",
+			Handler:    _Article_FavoriteArticle_Handler,
+		},
+		{
+			MethodName: "UnFavoriteArticle",
+			Handler:    _Article_UnFavoriteArticle_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

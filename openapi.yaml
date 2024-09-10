@@ -24,7 +24,7 @@ paths:
                 - name: favorited
                   in: query
                   schema:
-                    type: boolean
+                    type: string
                 - name: limit
                   in: query
                   schema:
@@ -78,7 +78,7 @@ paths:
                 - name: favorited
                   in: query
                   schema:
-                    type: boolean
+                    type: string
                 - name: limit
                   in: query
                   schema:
@@ -157,6 +157,47 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.article.v1.EmptyReply'
+    /api/articles/{slug}/favorite:
+        post:
+            tags:
+                - Article
+            operationId: Article_FavoriteArticle
+            parameters:
+                - name: slug
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.article.v1.SlugRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.article.v1.ArticleReply'
+        delete:
+            tags:
+                - Article
+            operationId: Article_UnFavoriteArticle
+            parameters:
+                - name: slug
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.article.v1.ArticleReply'
     /api/profiles/{username}:
         get:
             tags:
@@ -388,6 +429,11 @@ components:
                     type: array
                     items:
                         type: string
+        api.article.v1.SlugRequest:
+            type: object
+            properties:
+                slug:
+                    type: string
         helloworld.v1.HelloReply:
             type: object
             properties:
