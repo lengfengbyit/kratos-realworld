@@ -9,4 +9,5 @@ var ProviderSet = wire.NewSet(
 	NewProfileService,
 	NewArticleService,
 	NewCommentService,
+	NewTagService,
 )

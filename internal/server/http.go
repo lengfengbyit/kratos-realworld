@@ -6,6 +6,7 @@ import (
 	comment "kratos-realworld/api/comment/v1"
 	v1 "kratos-realworld/api/helloworld/v1"
 	profile "kratos-realworld/api/profile/v1"
+	tag "kratos-realworld/api/tag/v1"
 	user "kratos-realworld/api/user/v1"
 	"kratos-realworld/internal/conf"
 	"kratos-realworld/internal/httperr"
@@ -28,6 +29,7 @@ func MatchRouter() selector.MatchFunc {
 		"/user.v1.UserApi/Register":           {},
 		"/api.article.v1.Article/ListArticle": {},
 		"/api.comment.v1.Comment/ListComment": {},
+		"/api.tag.v1.Tag/ListTag":             {},
 	}
 	return func(ctx context.Context, operation string) bool {
 		if _, ok := skipRouters[operation]; ok {
@@ -38,12 +40,14 @@ func MatchRouter() selector.MatchFunc {
 }
 
 // NewHTTPServer new an HTTP server.
-func NewHTTPServer(c *conf.Server, greeter *service.GreeterService,
+func NewHTTPServer(c *conf.Server, logger log.Logger,
+	greeter *service.GreeterService,
 	userApi *service.UserApiService,
 	profileApi *service.ProfileService,
 	articleApi *service.ArticleService,
 	commentApi *service.CommentService,
-	logger log.Logger) *http.Server {
+	tagApi *service.TagService,
+) *http.Server {
 	var opts = []http.ServerOption{
 
 		// 跨域设置
@@ -81,5 +85,6 @@ func NewHTTPServer(c *conf.Server, greeter *service.GreeterService,
 	profile.RegisterProfileHTTPServer(srv, profileApi)
 	article.RegisterArticleHTTPServer(srv, articleApi)
 	comment.RegisterCommentHTTPServer(srv, commentApi)
+	tag.RegisterTagHTTPServer(srv, tagApi)
 	return srv
 }

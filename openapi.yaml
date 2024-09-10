@@ -331,6 +331,29 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/profile.v1.ProfileReply'
+    /api/tags:
+        get:
+            tags:
+                - Tag
+            operationId: Tag_ListTag
+            parameters:
+                - name: offset
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+                - name: limit
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint32
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.tag.v1.ListTagReply'
     /api/user:
         get:
             tags:
@@ -557,6 +580,13 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/api.comment.v1.CommentInfoReply'
+        api.tag.v1.ListTagReply:
+            type: object
+            properties:
+                tags:
+                    type: array
+                    items:
+                        type: string
         helloworld.v1.HelloReply:
             type: object
             properties:
@@ -650,4 +680,5 @@ tags:
     - name: Greeter
       description: The greeting service definition.
     - name: Profile
+    - name: Tag
     - name: UserApi

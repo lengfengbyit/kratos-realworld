@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package api.tag.v1;
+
+import "google/api/annotations.proto";
+
+option go_package = "kratos-realworld/api/tag/v1;v1";
+
+service Tag {
+  rpc ListTag (ListTagRequest) returns (ListTagReply) {
+    option (google.api.http) = {
+      get: "/api/tags"
+    };
+  };
+}
+
+message ListTagRequest {
+  uint32 offset = 1;
+  uint32 limit = 2;
+}
+message ListTagReply {
+	repeated string tags = 1;
+}
